@@ -1,0 +1,81 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+import Customers from './pages/Customers';
+import Home from './pages/Home';
+import Products from './pages/Products';
+import Sales from './pages/Sales';
+import Reports from './pages/Reports';
+import Login from './pages/Login';
+import ResponsiveLayout from './components/ResponsiveLayout';
+import PrivateRoute from './components/PrivateRoute';
+import ToastContainer from './components/ToastContainer';
+
+const theme = createTheme({
+    palette: {
+        primary: {
+            main: '#1976d2',
+        },
+        secondary: {
+            main: '#dc004e',
+        },
+    },
+});
+
+function App() {
+    return (
+        <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <ToastProvider>
+                <AuthProvider>
+                    <Router>
+                        <Routes>
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/" element={
+                                <PrivateRoute>
+                                    <ResponsiveLayout>
+                                        <Home />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/customers" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <Customers />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/products" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <Products />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/sales" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <Sales />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/reports" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <Reports />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                        </Routes>
+                        <ToastContainer />
+                    </Router>
+                </AuthProvider>
+            </ToastProvider>
+        </ThemeProvider>
+    );
+}
+
+export default App;
