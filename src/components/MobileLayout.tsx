@@ -7,6 +7,7 @@ import {
     Drawer,
     List,
     ListItem,
+    ListItemButton,
     ListItemIcon,
     ListItemText,
     Box,
@@ -37,6 +38,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
         { label: 'Clientes', path: '/customers', icon: <PeopleIcon /> },
         { label: 'Produtos', path: '/products', icon: <InventoryIcon /> },
         { label: 'Vendas', path: '/sales', icon: <ShoppingCartIcon /> },
+        { label: 'Compras', path: '/compras', icon: <ShoppingCartIcon /> },
         { label: 'Relatórios', path: '/reports', icon: <AssessmentIcon /> },
     ];
 
@@ -93,23 +95,23 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
 
                 <List>
                     {menuItems.map((item) => (
-                        <ListItem
-                            key={item.path}
-                            button
-                            onClick={() => handleMenuClick(item.path)}
-                            selected={location.pathname === item.path}
-                            sx={{
-                                '&.Mui-selected': {
-                                    backgroundColor: 'primary.main',
-                                    color: 'white',
-                                    '& .MuiListItemIcon-root': {
+                        <ListItem key={item.path} disablePadding>
+                            <ListItemButton
+                                onClick={() => handleMenuClick(item.path)}
+                                selected={location.pathname === item.path}
+                                sx={{
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'primary.main',
                                         color: 'white',
+                                        '& .MuiListItemIcon-root': {
+                                            color: 'white',
+                                        },
                                     },
-                                },
-                            }}
-                        >
-                            <ListItemIcon>{item.icon}</ListItemIcon>
-                            <ListItemText primary={item.label} />
+                                }}
+                            >
+                                <ListItemIcon>{item.icon}</ListItemIcon>
+                                <ListItemText primary={item.label} />
+                            </ListItemButton>
                         </ListItem>
                     ))}
                 </List>

@@ -104,6 +104,23 @@ const Layout = ({ children }) => {
                 💰 Vendas
               </Link>
               <Link
+                to="/compras"
+                style={{
+                  display: "block",
+                  padding: "15px 20px",
+                  color: "white",
+                  textDecoration: "none",
+                  backgroundColor: isActive("/compras")
+                    ? "#4CAF50"
+                    : "transparent",
+                  borderLeft: isActive("/compras")
+                    ? "4px solid #4CAF50"
+                    : "4px solid transparent",
+                }}
+              >
+                🛒 Compras
+              </Link>
+              <Link
                 to="/reports"
                 style={{
                   display: "block",
@@ -188,6 +205,7 @@ const Layout = ({ children }) => {
             {location.pathname === "/" && "Dashboard"}
             {location.pathname === "/customers" && "Clientes"}
             {location.pathname === "/sales" && "Vendas"}
+            {location.pathname === "/compras" && "Compras"}
           </h1>
         </header>
 

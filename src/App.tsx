@@ -8,10 +8,12 @@ import Customers from './pages/Customers';
 import Home from './pages/Home';
 import Sales from './pages/Sales';
 import Reports from './pages/Reports';
+import Estoque from './pages/Estoque';
 import Login from './pages/Login';
 import ResponsiveLayout from './components/ResponsiveLayout';
 import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/ToastContainer';
+import Compras from './pages/Compras';
 
 const theme = createTheme({
     palette: {
@@ -54,6 +56,20 @@ function App() {
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
+                            <Route path="/compras" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <Compras />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/estoque-movimentacoes" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <Estoque />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
                             <Route path="/reports" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
@@ -71,3 +87,4 @@ function App() {
 }
 
 export default App;
+
