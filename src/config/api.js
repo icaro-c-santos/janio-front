@@ -51,11 +51,17 @@ export const apiRequest = async (endpoint, options = {}) => {
       ? buildApiUrl(endpoint())
       : buildApiUrl(endpoint);
 
+  const headers = {
+    ...API_CONFIG.DEFAULT_HEADERS,
+    ...options.headers,
+  };
+  try {
+    const token = localStorage.getItem("janio_erp_token");
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  } catch {}
+
   const config = {
-    headers: {
-      ...API_CONFIG.DEFAULT_HEADERS,
-      ...options.headers,
-    },
+    headers,
     ...options,
   };
 
@@ -69,7 +75,9 @@ export const apiRequest = async (endpoint, options = {}) => {
   const response = await fetch(url, config);
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const err = await response.json().catch(() => ({}));
+    const msg = err?.message || `HTTP error! status: ${response.status}`;
+    throw new Error(msg);
   }
 
   return response.json();
@@ -82,15 +90,24 @@ export const uploadFile = async (endpoint, formData) => {
       ? buildApiUrl(endpoint())
       : buildApiUrl(endpoint);
 
+  const headers = {};
+  try {
+    const token = localStorage.getItem("janio_erp_token");
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  } catch {}
+
   const response = await fetch(url, {
     method: "POST",
     body: formData,
+    headers,
     // Não definir Content-Type para multipart/form-data
     // O browser define automaticamente com o boundary correto
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const err = await response.json().catch(() => ({}));
+    const msg = err?.message || `HTTP error! status: ${response.status}`;
+    throw new Error(msg);
   }
 
   return response.json();

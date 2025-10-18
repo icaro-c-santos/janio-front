@@ -67,7 +67,7 @@ const Layout = ({ children }) => {
             🏠 Home
           </Link>
 
-          {user?.role === "admin" && (
+          {String(user?.role || "").toLowerCase() === "admin" && (
             <>
               <Link
                 to="/customers"
@@ -85,23 +85,6 @@ const Layout = ({ children }) => {
                 }}
               >
                 👥 Clientes
-              </Link>
-              <Link
-                to="/products"
-                style={{
-                  display: "block",
-                  padding: "15px 20px",
-                  color: "white",
-                  textDecoration: "none",
-                  backgroundColor: isActive("/products")
-                    ? "#4CAF50"
-                    : "transparent",
-                  borderLeft: isActive("/products")
-                    ? "4px solid #4CAF50"
-                    : "4px solid transparent",
-                }}
-              >
-                📦 Produtos
               </Link>
               <Link
                 to="/sales"
@@ -157,7 +140,7 @@ const Layout = ({ children }) => {
             {user?.name}
           </div>
           <div style={{ fontSize: "12px", color: "#bdc3c7" }}>
-            {user?.role === "admin" ? "Administrador" : "Cliente"}
+            {String(user?.role || "").toLowerCase() === "admin" ? "Administrador" : "Cliente"}
           </div>
           <button
             onClick={logout}
@@ -204,7 +187,6 @@ const Layout = ({ children }) => {
           >
             {location.pathname === "/" && "Dashboard"}
             {location.pathname === "/customers" && "Clientes"}
-            {location.pathname === "/products" && "Produtos"}
             {location.pathname === "/sales" && "Vendas"}
           </h1>
         </header>

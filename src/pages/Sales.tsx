@@ -48,16 +48,12 @@ const Sales: React.FC = () => {
     setError(null);
 
     try {
-      const response = await salesService.getAllSales(pageNumber, pageSize);
-
-      if (response.success && response.data) {
-        setSales(response.data.items);
-        setTotalItems(response.data.total);
-        setTotalPages(Math.ceil(response.data.total / pageSize));
-        setPage(response.data.page);
-      } else {
-        setError(response.error || 'Erro ao carregar vendas');
-      }
+      const response = await salesService.getAllSales({ page: pageNumber, pageSize });
+      setSales(response.items || []);
+      const total = response.total || 0;
+      setTotalItems(total);
+      setTotalPages(Math.ceil(total / pageSize));
+      setPage(response.page || pageNumber);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar vendas';
 
@@ -148,27 +144,7 @@ const Sales: React.FC = () => {
     setDetailsLoading(false);
   };
 
-  const getCustomerName = (customerId: string) => {
-    // Buscar o nome do cliente na lista de vendas
-    const sale = sales.find(s => s.customerId === customerId);
-    if (sale?.customer?.user) {
-      if (sale.customer.user.type === 'INDIVIDUAL') {
-        return sale.customer.user.individual?.fullName || 'Nome não informado';
-      } else {
-        return sale.customer.user.company?.legalName || 'Razão social não informada';
-      }
-    }
-    return `Cliente ${customerId.slice(0, 8)}`;
-  };
-
-  const getProductName = (productId: string) => {
-    // Buscar o nome do produto na lista de vendas
-    const sale = sales.find(s => s.productId === productId);
-    if (sale?.product) {
-      return sale.product.name;
-    }
-    return 'Água de Coco Natural';
-  };
+  const getCustomerName = (customerId: string) => `Cliente ${customerId.slice(0, 8)}`;
 
   return (
     <Box>
@@ -289,7 +265,6 @@ const Sales: React.FC = () => {
         onClose={handleFormCancel}
         onConfirm={handleConfirmSale}
         saleData={pendingSale}
-        productName={pendingSale ? getProductName(pendingSale.productId) : undefined}
         customerName={pendingSale ? getCustomerName(pendingSale.customerId) : undefined}
         loading={loading}
       />
@@ -299,7 +274,6 @@ const Sales: React.FC = () => {
         open={showSuccessModal}
         onClose={handleFormSuccess}
         saleData={completedSale}
-        productName={completedSale ? getProductName(completedSale.productId) : undefined}
         customerName={completedSale ? getCustomerName(completedSale.customerId) : undefined}
       />
 

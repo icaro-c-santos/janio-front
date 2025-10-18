@@ -19,7 +19,6 @@ interface SaleConfirmationModalProps {
     onClose: () => void;
     onConfirm: () => void;
     saleData: CreateSaleRequest | null;
-    productName?: string;
     customerName?: string;
     loading?: boolean;
 }
@@ -29,7 +28,6 @@ const SaleConfirmationModal: React.FC<SaleConfirmationModalProps> = ({
     onClose,
     onConfirm,
     saleData,
-    productName = 'Produto',
     customerName = 'Cliente',
     loading = false,
 }) => {
@@ -45,6 +43,8 @@ const SaleConfirmationModal: React.FC<SaleConfirmationModalProps> = ({
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
+
+    const totalValue = (saleData.quantity || 0) * (saleData.unitPrice || 0);
 
     return (
         <Dialog
@@ -73,15 +73,6 @@ const SaleConfirmationModal: React.FC<SaleConfirmationModalProps> = ({
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Typography variant="body2" color="text.secondary">
-                                Produto:
-                            </Typography>
-                            <Typography variant="body2" fontWeight="medium">
-                                {productName}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2" color="text.secondary">
                                 Cliente:
                             </Typography>
                             <Typography variant="body2" fontWeight="medium">
@@ -94,11 +85,11 @@ const SaleConfirmationModal: React.FC<SaleConfirmationModalProps> = ({
                                 Data da Venda:
                             </Typography>
                             <Typography variant="body2" fontWeight="medium">
-                                {formatDate(saleData.saleDate)}
+                                {saleData.saleDate ? formatDate(saleData.saleDate) : '-'}
                             </Typography>
                         </Box>
 
-                        {saleData.file && (
+                        {saleData.receipt && (
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" color="text.secondary">
                                     Anexo:
@@ -129,7 +120,7 @@ const SaleConfirmationModal: React.FC<SaleConfirmationModalProps> = ({
                                 Preço Unitário:
                             </Typography>
                             <Typography variant="body2" fontWeight="medium">
-                                {formatCurrency(saleData.price)}
+                                {formatCurrency(saleData.unitPrice)}
                             </Typography>
                         </Box>
 
@@ -140,7 +131,7 @@ const SaleConfirmationModal: React.FC<SaleConfirmationModalProps> = ({
                                 Valor Total:
                             </Typography>
                             <Typography variant="h6" color="primary" fontWeight="bold">
-                                {formatCurrency(saleData.totalValue)}
+                                {formatCurrency(totalValue)}
                             </Typography>
                         </Box>
                     </Box>

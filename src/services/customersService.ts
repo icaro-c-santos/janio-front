@@ -1,116 +1,26 @@
 const API_BASE_URL = "http://localhost:3000"; // Ajuste conforme necessário
 
+export type CustomerType = "PF" | "PJ";
+
 export interface CreateCustomerRequest {
-  user: {
-    type: "INDIVIDUAL" | "COMPANY";
-    email?: string;
-    individual?: {
-      cpf: string;
-      fullName: string;
-      birthDate?: string;
-    };
-    company?: {
-      cnpj: string;
-      legalName: string;
-      tradeName?: string;
-      stateRegistration?: string;
-    };
-    address: {
-      street: string;
-      number: string;
-      district: string;
-      city: string;
-      state: string;
-      postalCode: string;
-      country: string;
-    };
-    phone: {
-      areaCode: string;
-      number: string;
-      isWhatsapp: boolean;
-      type: "FIXED" | "MOBILE";
-    };
-  };
+  name: string;
+  email?: string;
+  type: CustomerType;
 }
 
 export interface Customer {
-  userId: string;
-  user: {
-    id: string;
-    type: "INDIVIDUAL" | "COMPANY";
-    email?: string;
-    individual?: {
-      cpf: string;
-      fullName: string;
-      birthDate?: string;
-    };
-    company?: {
-      cnpj: string;
-      legalName: string;
-      tradeName?: string;
-      stateRegistration?: string;
-    };
-    primaryAddress: {
-      id: string;
-      street: string;
-      number: string;
-      district: string;
-      city: string;
-      state: string;
-      postalCode: string;
-      country: string;
-      isPrimary: boolean;
-    };
-    address: Array<{
-      id: string;
-      street: string;
-      number: string;
-      district: string;
-      city: string;
-      state: string;
-      postalCode: string;
-      country: string;
-      isPrimary: boolean;
-    }>;
-    primaryPhone?: {
-      id: string;
-      areaCode: string;
-      number: string;
-      isWhatsapp: boolean;
-      type: "FIXED" | "MOBILE";
-      isPrimary: boolean;
-    };
-    phones: Array<{
-      id: string;
-      areaCode: string;
-      number: string;
-      isWhatsapp: boolean;
-      type: "FIXED" | "MOBILE";
-      isPrimary: boolean;
-    }>;
-    createdAt: string;
-    deletedAt: string | null;
-  };
-  deletedAt: string | null;
+  id: string;
+  name: string;
+  email?: string;
+  type: CustomerType;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+export interface ApiErrorResponse {
   message?: string;
   errors?: Array<{ message: string; path: string[] }>;
-}
-
-export interface PaginatedResponse<T> {
-  success: boolean;
-  data?: {
-    items: T[];
-    total: number;
-    page: number;
-    pageSize: number;
-  };
-  error?: string;
 }
 
 class CustomersService {
@@ -120,9 +30,15 @@ class CustomersService {
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
-    const defaultHeaders = {
+    const defaultHeaders: Record<string, string> = {
       "Content-Type": "application/json",
     };
+    try {
+      const token = localStorage.getItem('janio_erp_token');
+      if (token) {
+        defaultHeaders["Authorization"] = `Bearer ${token}`;
+      }
+    } catch {}
 
     try {
       const response = await fetch(url, {
@@ -134,20 +50,19 @@ class CustomersService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData: ApiErrorResponse = await response
+          .json()
+          .catch(() => ({} as ApiErrorResponse));
 
-        // Tratamento específico para diferentes tipos de erro
         if (response.status === 400) {
-          // Erro de validação
           if (errorData.errors && Array.isArray(errorData.errors)) {
             const validationErrors = errorData.errors
-              .map((err: any) => `${err.path?.join(".")}: ${err.message}`)
+              .map((err: any) => `${(err as any).path?.join(".")}: ${(err as any).message}`)
               .join(", ");
             throw new Error(`Dados inválidos: ${validationErrors}`);
           }
           throw new Error(errorData.message || "Dados inválidos");
         } else if (response.status === 409) {
-          // Conflito (ex: CPF/CNPJ já existe)
           throw new Error(errorData.message || "Cliente já cadastrado");
         } else if (response.status === 500) {
           throw new Error(
@@ -155,8 +70,7 @@ class CustomersService {
           );
         } else {
           throw new Error(
-            errorData.message ||
-              `Erro ${response.status}: ${response.statusText}`
+            errorData.message || `Erro ${response.status}: ${response.statusText}`
           );
         }
       }
@@ -171,27 +85,15 @@ class CustomersService {
     }
   }
 
-  async createCustomer(
-    customerData: CreateCustomerRequest
-  ): Promise<ApiResponse<Customer>> {
-    return this.makeRequest<ApiResponse<Customer>>("/customers", {
+  async createCustomer(customerData: CreateCustomerRequest): Promise<Customer> {
+    return this.makeRequest<Customer>("/customers", {
       method: "POST",
       body: JSON.stringify(customerData),
     });
   }
 
-  async getAllCustomers(
-    page: number = 1,
-    pageSize: number = 10
-  ): Promise<PaginatedResponse<Customer>> {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      pageSize: pageSize.toString(),
-    });
-
-    return this.makeRequest<PaginatedResponse<Customer>>(
-      `/customers?${params}`
-    );
+  async getAllCustomers(): Promise<Customer[]> {
+    return this.makeRequest<Customer[]>(`/customers`);
   }
 }
 

@@ -1,49 +1,22 @@
 const API_BASE_URL = "http://localhost:3000";
 
-export interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price?: number;
-}
-
 export interface CreateSaleRequest {
-  productId: string;
   customerId: string;
   quantity: number;
-  price: number;
-  totalValue: number;
-  saleDate: string;
-  file?: File;
+  unitPrice: number;
+  saleDate?: string;
+  receipt?: File;
 }
 
 export interface Sale {
   id: string;
-  productId: string;
   customerId: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+  unitPrice: number | string;
+  totalPrice: number | string;
   saleDate: string;
   receiptFileKey?: string | null;
-  receiptFileUrl?: string | null;
-  product?: Product;
-  customer?: {
-    userId: string;
-    user: {
-      id: string;
-      type: "INDIVIDUAL" | "COMPANY";
-      individual?: {
-        fullName: string;
-        cpf: string;
-      };
-      company?: {
-        legalName: string;
-        tradeName: string;
-        cnpj: string;
-      };
-    };
-  };
+  receiptDownloadUrl?: string;
 }
 
 export interface ApiResponse<T> {
@@ -78,6 +51,14 @@ class SalesService {
     if (!(options.body instanceof FormData)) {
       defaultHeaders["Content-Type"] = "application/json";
     }
+
+    // Token de autenticação
+    try {
+      const token = localStorage.getItem('janio_erp_token');
+      if (token) {
+        defaultHeaders["Authorization"] = `Bearer ${token}`;
+      }
+    } catch {}
 
     try {
       const response = await fetch(url, {
@@ -126,122 +107,23 @@ class SalesService {
     }
   }
 
-  // Buscar todos os produtos
-  async getProducts(): Promise<Product[]> {
-    try {
-      const response = await this.makeRequest<ApiResponse<Product[]>>(
-        "/products"
-      );
-
-      if (response.success && response.data) {
-        return response.data;
-      }
-
-      return [];
-    } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
-      throw new Error("Erro ao carregar produtos");
-    }
-  }
-
-  // Hook para clientes
-  async getCustomers(): Promise<
-    Array<{ id: string; name: string; type: "INDIVIDUAL" | "COMPANY" }>
-  > {
-    try {
-      const response = await this.makeRequest<PaginatedResponse<any>>(
-        "/customers?pageSize=100"
-      );
-
-      if (response.success && response.data) {
-        return response.data.items.map((customer) => ({
-          id: customer.userId,
-          name:
-            customer.user.type === "INDIVIDUAL"
-              ? customer.user.individual?.fullName || "Nome não informado"
-              : customer.user.company?.legalName ||
-                "Razão social não informada",
-          type: customer.user.type,
-        }));
-      }
-
-      return [];
-    } catch (error) {
-      throw new Error("Erro ao carregar clientes");
-    }
-  }
-
-  // Buscar preço específico do produto para o cliente
-  async getProductPriceByCustomer(
-    productId: string,
-    customerId: string
-  ): Promise<number | null> {
-    try {
-      console.log(
-        `Buscando preço para produto ${productId} e cliente ${customerId}`
-      );
-
-      const response = await fetch(
-        `${API_BASE_URL}/products/${productId}/price/${customerId}/`
-      );
-
-      console.log("Status da resposta:", response.status);
-
-      if (response.status === 404) {
-        console.log("Preço não encontrado (404)");
-        return null;
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Resposta da API:", data);
-
-      // O backend retorna diretamente { price: number } quando encontra
-      if (data && typeof data.price === "number") {
-        console.log("Preço encontrado:", data.price);
-        return data.price;
-      }
-
-      console.log("Preço não encontrado ou formato inválido");
-      return null;
-    } catch (error) {
-      console.error("Erro na API ao buscar preço:", error);
-      // Se não encontrar preço específico, retorna null
-      return null;
-    }
-  }
-
   // Criar venda
   async createSale(saleData: CreateSaleRequest): Promise<ApiResponse<Sale>> {
-    // Validar se os valores numéricos são válidos
-    if (isNaN(saleData.price) || saleData.price <= 0) {
-      throw new Error(
-        "Preço unitário deve ser um número válido maior que zero"
-      );
-    }
-
-    if (isNaN(saleData.quantity) || saleData.quantity <= 0) {
+    // Validações básicas
+    if (isNaN(saleData.quantity as any) || saleData.quantity <= 0) {
       throw new Error("Quantidade deve ser um número válido maior que zero");
-    }
-
-    if (isNaN(saleData.totalValue) || saleData.totalValue <= 0) {
-      throw new Error("Valor total deve ser um número válido maior que zero");
     }
 
     const formData = new FormData();
 
-    formData.append("productId", saleData.productId);
     formData.append("customerId", saleData.customerId);
     formData.append("quantity", saleData.quantity.toString());
-    formData.append("unitPrice", saleData.price.toString());
-    formData.append("totalValue", saleData.totalValue.toString());
-    formData.append("saleDate", saleData.saleDate);
-
-    if (saleData.file) {
-      formData.append("file", saleData.file);
+    formData.append("unitPrice", saleData.unitPrice.toString());
+    if (saleData.saleDate) {
+      formData.append("saleDate", saleData.saleDate);
+    }
+    if (saleData.receipt) {
+      formData.append("receipt", saleData.receipt);
     }
 
     return this.makeRequest<ApiResponse<Sale>>("/sales", {
@@ -250,17 +132,20 @@ class SalesService {
     });
   }
 
-  // Listar vendas
+  // Listar vendas (passa filtros diretamente)
   async getAllSales(
-    page: number = 1,
-    pageSize: number = 20
-  ): Promise<PaginatedResponse<Sale>> {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      pageSize: pageSize.toString(),
-    });
-
-    return this.makeRequest<PaginatedResponse<Sale>>(`/sales?${params}`);
+    params?: Record<string, string | number | undefined>
+  ): Promise<any> {
+    const qs = params
+      ? "?" +
+        new URLSearchParams(
+          Object.entries(params).reduce<Record<string, string>>((acc, [k, v]) => {
+            if (v !== undefined && v !== null) acc[k] = String(v);
+            return acc;
+          }, {})
+        ).toString()
+      : "";
+    return this.makeRequest<any>(`/sales${qs}`);
   }
 
   // Obter venda por ID

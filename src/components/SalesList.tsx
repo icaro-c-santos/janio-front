@@ -46,28 +46,12 @@ const SalesList: React.FC<SalesListProps> = ({
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
-    const getCustomerName = (sale: Sale) => {
-        if (sale.customer?.user) {
-            if (sale.customer.user.type === 'INDIVIDUAL') {
-                return sale.customer.user.individual?.fullName || 'Nome não informado';
-            } else {
-                return sale.customer.user.company?.legalName || 'Razão social não informada';
-            }
-        }
-        return 'Cliente não encontrado';
-    };
-
-    const getProductName = (sale: Sale) => {
-        if (sale.product) {
-            return sale.product.name;
-        }
-        return 'Produto não encontrado';
-    };
+    const getCustomerName = (sale: Sale) => `Cliente ${sale.customerId.slice(0, 8)}`;
 
     const handleDownloadReceipt = (e: React.MouseEvent, sale: Sale) => {
         e.stopPropagation(); // Previne que o clique abra o modal de detalhes
-        if (sale.receiptFileUrl) {
-            window.open(sale.receiptFileUrl, '_blank');
+        if (sale.receiptDownloadUrl) {
+            window.open(sale.receiptDownloadUrl, '_blank');
         }
     };
 
@@ -79,7 +63,6 @@ const SalesList: React.FC<SalesListProps> = ({
                         <TableRow>
                             <TableCell>Data</TableCell>
                             <TableCell>Cliente</TableCell>
-                            <TableCell>Produto</TableCell>
                             <TableCell>Quantidade</TableCell>
                             <TableCell>Preço Unit.</TableCell>
                             <TableCell>Total</TableCell>
@@ -126,19 +109,7 @@ const SalesList: React.FC<SalesListProps> = ({
                                             <Typography variant="body2">
                                                 {getCustomerName(sale)}
                                             </Typography>
-                                            {sale.customer?.user && (
-                                                <Chip
-                                                    label={sale.customer.user.type === 'INDIVIDUAL' ? 'PF' : 'PJ'}
-                                                    size="small"
-                                                    color={sale.customer.user.type === 'INDIVIDUAL' ? 'primary' : 'secondary'}
-                                                />
-                                            )}
                                         </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2">
-                                            {getProductName(sale)}
-                                        </Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2">
@@ -147,12 +118,12 @@ const SalesList: React.FC<SalesListProps> = ({
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2">
-                                            {formatCurrency(sale.unitPrice)}
+                                            {formatCurrency(Number(sale.unitPrice))}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2" fontWeight="medium" color="primary">
-                                            {formatCurrency(sale.totalPrice)}
+                                            {formatCurrency(Number(sale.totalPrice))}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
@@ -163,7 +134,7 @@ const SalesList: React.FC<SalesListProps> = ({
                                         />
                                     </TableCell>
                                     <TableCell align="center">
-                                        {sale.receiptFileUrl && (
+                                        {sale.receiptDownloadUrl && (
                                             <Tooltip title="Baixar comprovante">
                                                 <IconButton
                                                     size="small"

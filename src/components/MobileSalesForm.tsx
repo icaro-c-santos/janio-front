@@ -19,7 +19,8 @@ import {
     Chip,
 } from '@mui/material';
 import { AttachFile as AttachFileIcon } from '@mui/icons-material';
-import { salesService, CreateSaleRequest, Product } from '../services/salesService';
+import { salesService, CreateSaleRequest } from '../services/salesService';
+import { customersService, Customer } from '../services/customersService';
 import { useToast } from '../contexts/ToastContext';
 
 interface MobileSalesFormProps {
@@ -28,29 +29,20 @@ interface MobileSalesFormProps {
     onConfirm?: (saleData: CreateSaleRequest) => void;
 }
 
-interface Customer {
-    id: string;
-    name: string;
-    type: "INDIVIDUAL" | "COMPANY";
-}
-
-const steps = ['Produto e Cliente', 'Detalhes da Venda', 'Confirmação'];
+const steps = ['Cliente', 'Detalhes da Venda', 'Confirmação'];
 
 const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, onConfirm }) => {
     const { success: showSuccess, error: showError } = useToast();
 
     const [activeStep, setActiveStep] = useState(0);
     const [formData, setFormData] = useState<CreateSaleRequest>({
-        productId: '',
         customerId: '',
         quantity: 1,
-        price: 0,
-        totalValue: 0,
+        unitPrice: 0,
         saleDate: new Date().toISOString().split('T')[0],
-        file: undefined,
+        receipt: undefined,
     });
 
-    const [products, setProducts] = useState<Product[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
@@ -64,23 +56,8 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
             try {
                 setLoadingData(true);
 
-                const [productsData, customersData] = await Promise.all([
-                    salesService.getProducts(),
-                    salesService.getCustomers()
-                ]);
-
-                setProducts(productsData);
+                const customersData = await customersService.getAllCustomers();
                 setCustomers(customersData);
-
-                // Preselecionar primeiro produto
-                if (productsData.length > 0) {
-                    setFormData(prev => ({
-                        ...prev,
-                        productId: productsData[0].id,
-                        price: productsData[0].price || 0,
-                        totalValue: (productsData[0].price || 0) * prev.quantity
-                    }));
-                }
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
                 showError(err instanceof Error ? err.message : 'Erro ao carregar dados');
@@ -92,60 +69,17 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
         loadInitialData();
     }, [showError]);
 
-    // Calcular valor total quando quantidade ou preço mudar
-    useEffect(() => {
-        const quantity = Number(formData.quantity) || 0;
-        const price = Number(formData.price) || 0;
-        const total = quantity * price;
-        setFormData(prev => ({ ...prev, totalValue: total }));
-    }, [formData.quantity, formData.price]);
+    // Sem cálculo de total no estado; será calculado on-the-fly
 
     // Buscar preço específico quando cliente for selecionado
     const handleCustomerChange = async (customerId: string) => {
-        if (!customerId || !formData.productId) {
-            setFormData(prev => ({ ...prev, customerId }));
-            return;
-        }
-
-        try {
-            console.log('Buscando preço específico para:', { productId: formData.productId, customerId });
-            const specificPrice = await salesService.getProductPriceByCustomer(
-                formData.productId,
-                customerId
-            );
-
-            console.log('Preço específico retornado:', specificPrice);
-
-            const selectedProduct = products.find(p => p.id === formData.productId);
-            const finalPrice = specificPrice !== null ? specificPrice : (selectedProduct?.price || 0);
-
-            console.log('Preço final a ser aplicado:', finalPrice);
-
-            setFormData(prev => ({
-                ...prev,
-                customerId,
-                price: finalPrice,
-                totalValue: finalPrice * prev.quantity
-            }));
-        } catch (err) {
-            console.error('Erro ao buscar preço específico:', err);
-            const selectedProduct = products.find(p => p.id === formData.productId);
-            setFormData(prev => ({
-                ...prev,
-                customerId,
-                price: selectedProduct?.price || 0,
-                totalValue: (selectedProduct?.price || 0) * prev.quantity
-            }));
-        }
+        setFormData(prev => ({ ...prev, customerId }));
     };
 
     const handleInputChange = (field: keyof CreateSaleRequest, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
-        // Se o produto foi alterado e já há um cliente selecionado, buscar preço específico
-        if (field === 'productId' && formData.customerId) {
-            handleProductChange(value, formData.customerId);
-        }
+        // Sem lógica de produto no novo contrato
 
         if (fieldErrors[field]) {
             setFieldErrors(prev => {
@@ -156,40 +90,13 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
         }
     };
 
-    // Buscar preço específico quando produto for alterado e cliente já estiver selecionado
-    const handleProductChange = async (productId: string, customerId: string) => {
-        if (!productId || !customerId) return;
-
-        try {
-            const specificPrice = await salesService.getProductPriceByCustomer(
-                productId,
-                customerId
-            );
-
-            const selectedProduct = products.find(p => p.id === productId);
-            const finalPrice = specificPrice !== null ? specificPrice : (selectedProduct?.price || 0);
-
-            setFormData(prev => ({
-                ...prev,
-                price: finalPrice,
-                totalValue: finalPrice * prev.quantity
-            }));
-        } catch (err) {
-            console.error('Erro ao buscar preço específico:', err);
-            const selectedProduct = products.find(p => p.id === productId);
-            setFormData(prev => ({
-                ...prev,
-                price: selectedProduct?.price || 0,
-                totalValue: (selectedProduct?.price || 0) * prev.quantity
-            }));
-        }
-    };
+    // Removido: lógica de produto/preço
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             setSelectedFile(file);
-            setFormData(prev => ({ ...prev, file }));
+            setFormData(prev => ({ ...prev, receipt: file }));
         }
     };
 
@@ -197,9 +104,6 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
         const errors: Record<string, string> = {};
 
         if (step === 0) {
-            if (!formData.productId) {
-                errors.productId = 'Produto é obrigatório';
-            }
             if (!formData.customerId) {
                 errors.customerId = 'Cliente é obrigatório';
             }
@@ -207,8 +111,8 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
             if (!formData.quantity || formData.quantity <= 0) {
                 errors.quantity = 'Quantidade deve ser maior que zero';
             }
-            if (!formData.price || formData.price <= 0) {
-                errors.price = 'Preço deve ser maior que zero';
+            if (!formData.unitPrice || formData.unitPrice <= 0) {
+                errors.unitPrice = 'Preço deve ser maior que zero';
             }
             if (!formData.saleDate) {
                 errors.saleDate = 'Data da venda é obrigatória';
@@ -247,8 +151,8 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
         }).format(value);
     };
 
-    const getSelectedProduct = () => products.find(p => p.id === formData.productId);
     const getSelectedCustomer = () => customers.find(c => c.id === formData.customerId);
+    const totalValue = (Number(formData.quantity) || 0) * (Number(formData.unitPrice) || 0);
 
     if (loadingData) {
         return (
@@ -264,26 +168,8 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
                 return (
                     <Box sx={{ p: 2 }}>
                         <Typography variant="h6" gutterBottom>
-                            Produto e Cliente
+                            Cliente
                         </Typography>
-
-                        <FormControl fullWidth error={!!fieldErrors.productId} sx={{ mb: 2 }}>
-                            <InputLabel>Produto</InputLabel>
-                            <Select
-                                value={formData.productId}
-                                label="Produto"
-                                onChange={(e) => handleInputChange('productId', e.target.value)}
-                            >
-                                {products.map((product) => (
-                                    <MenuItem key={product.id} value={product.id}>
-                                        {product.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                            {fieldErrors.productId && (
-                                <FormHelperText>{fieldErrors.productId}</FormHelperText>
-                            )}
-                        </FormControl>
 
                         <FormControl fullWidth error={!!fieldErrors.customerId}>
                             <InputLabel>Cliente</InputLabel>
@@ -294,7 +180,7 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
                             >
                                 {customers.map((customer) => (
                                     <MenuItem key={customer.id} value={customer.id}>
-                                        {customer.name} ({customer.type === 'INDIVIDUAL' ? 'PF' : 'PJ'})
+                                        {customer.name}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -332,27 +218,20 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
                             fullWidth
                             label="Preço Unitário"
                             type="number"
-                            value={formData.price || ''}
+                            value={formData.unitPrice || ''}
                             onChange={(e) => {
-                                const value = parseFloat(e.target.value);
-                                handleInputChange('price', isNaN(value) ? 0 : value);
+                                const raw = String(e.target.value).replace(',', '.');
+                                const value = parseFloat(raw);
+                                handleInputChange('unitPrice', isNaN(value) ? 0 : value);
                             }}
-                            error={!!fieldErrors.price}
-                            helperText={fieldErrors.price || 'Digite o preço unitário'}
+                            error={!!fieldErrors.unitPrice}
+                            helperText={fieldErrors.unitPrice || 'Digite o preço unitário'}
                             inputProps={{ min: 0, step: 0.01 }}
                             sx={{ mb: 2 }}
                             required
                         />
 
-                        <TextField
-                            fullWidth
-                            label="Valor Total"
-                            type="number"
-                            value={isNaN(formData.totalValue) ? '0.00' : formData.totalValue.toFixed(2)}
-                            InputProps={{ readOnly: true }}
-                            helperText="Calculado automaticamente"
-                            sx={{ mb: 2 }}
-                        />
+                        {/* Total calculado será exibido na confirmação */}
 
                         <TextField
                             fullWidth
@@ -382,7 +261,7 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
                                     startIcon={<AttachFileIcon />}
                                     fullWidth
                                 >
-                                    {selectedFile ? selectedFile.name : 'Anexar PDF (Opcional)'}
+                                    {selectedFile ? selectedFile.name : 'Anexar Recibo PDF (Opcional)'}
                                 </Button>
                             </label>
                             {selectedFile && (
@@ -408,11 +287,6 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" color="text.secondary">Produto:</Typography>
-                                    <Typography variant="body2">{getSelectedProduct()?.name}</Typography>
-                                </Box>
-
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <Typography variant="body2" color="text.secondary">Cliente:</Typography>
                                     <Typography variant="body2">{getSelectedCustomer()?.name}</Typography>
                                 </Box>
@@ -424,7 +298,7 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
 
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <Typography variant="body2" color="text.secondary">Preço Unit.:</Typography>
-                                    <Typography variant="body2">{formatCurrency(formData.price)}</Typography>
+                                    <Typography variant="body2">{formatCurrency(Number(formData.unitPrice))}</Typography>
                                 </Box>
 
                                 <Divider sx={{ my: 1 }} />
@@ -432,7 +306,7 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <Typography variant="h6" color="primary">Total:</Typography>
                                     <Typography variant="h6" color="primary" fontWeight="bold">
-                                        {formatCurrency(formData.totalValue)}
+                                        {formatCurrency(totalValue)}
                                     </Typography>
                                 </Box>
 

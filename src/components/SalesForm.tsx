@@ -16,7 +16,8 @@ import {
     FormHelperText,
 } from '@mui/material';
 import { AttachFile as AttachFileIcon } from '@mui/icons-material';
-import { salesService, CreateSaleRequest, Product } from '../services/salesService';
+import { salesService, CreateSaleRequest } from '../services/salesService';
+import { customersService, Customer } from '../services/customersService';
 import { useToast } from '../contexts/ToastContext';
 
 interface SalesFormProps {
@@ -25,26 +26,19 @@ interface SalesFormProps {
     onConfirm?: (saleData: CreateSaleRequest) => void;
 }
 
-interface Customer {
-    id: string;
-    name: string;
-    type: "INDIVIDUAL" | "COMPANY";
-}
+// Mantém tipagem simples baseada no serviço de clientes
 
 const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm }) => {
     const { success: showSuccess, error: showError } = useToast();
 
     const [formData, setFormData] = useState<CreateSaleRequest>({
-        productId: '',
         customerId: '',
         quantity: 1,
-        price: 0,
-        totalValue: 0,
+        unitPrice: 0,
         saleDate: new Date().toISOString().split('T')[0],
-        file: undefined,
+        receipt: undefined,
     });
 
-    const [products, setProducts] = useState<Product[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
@@ -58,24 +52,8 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
             try {
                 setLoadingData(true);
 
-                // Carregar produtos e clientes em paralelo
-                const [productsData, customersData] = await Promise.all([
-                    salesService.getProducts(),
-                    salesService.getCustomers()
-                ]);
-
-                setProducts(productsData);
+                const customersData = await customersService.getAllCustomers();
                 setCustomers(customersData);
-
-                // Preselecionar primeiro produto
-                if (productsData.length > 0) {
-                    setFormData(prev => ({
-                        ...prev,
-                        productId: productsData[0].id,
-                        price: productsData[0].price || 0,
-                        totalValue: (productsData[0].price || 0) * prev.quantity
-                    }));
-                }
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
                 showError(err instanceof Error ? err.message : 'Erro ao carregar dados');
@@ -87,61 +65,16 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
         loadInitialData();
     }, [showError]);
 
-    // Calcular valor total quando quantidade ou preço mudar
-    useEffect(() => {
-        const quantity = Number(formData.quantity) || 0;
-        const price = Number(formData.price) || 0;
-        const total = quantity * price;
-        setFormData(prev => ({ ...prev, totalValue: total }));
-    }, [formData.quantity, formData.price]);
+    // Nenhum cálculo de total necessário no novo contrato
 
-    // Buscar preço específico quando cliente for selecionado
     const handleCustomerChange = async (customerId: string) => {
-        if (!customerId || !formData.productId) {
-            setFormData(prev => ({ ...prev, customerId }));
-            return;
-        }
-
-        try {
-            console.log('Buscando preço específico para:', { productId: formData.productId, customerId });
-            const specificPrice = await salesService.getProductPriceByCustomer(
-                formData.productId,
-                customerId
-            );
-
-            console.log('Preço específico retornado:', specificPrice);
-
-            const selectedProduct = products.find(p => p.id === formData.productId);
-            const finalPrice = specificPrice !== null ? specificPrice : (selectedProduct?.price || 0);
-
-            console.log('Preço final a ser aplicado:', finalPrice);
-
-            setFormData(prev => ({
-                ...prev,
-                customerId,
-                price: finalPrice,
-                totalValue: finalPrice * prev.quantity
-            }));
-        } catch (err) {
-            console.error('Erro ao buscar preço específico:', err);
-            // Em caso de erro, mantém o preço padrão
-            const selectedProduct = products.find(p => p.id === formData.productId);
-            setFormData(prev => ({
-                ...prev,
-                customerId,
-                price: selectedProduct?.price || 0,
-                totalValue: (selectedProduct?.price || 0) * prev.quantity
-            }));
-        }
+        setFormData(prev => ({ ...prev, customerId }));
     };
 
     const handleInputChange = (field: keyof CreateSaleRequest, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
-        // Se o produto foi alterado e já há um cliente selecionado, buscar preço específico
-        if (field === 'productId' && formData.customerId) {
-            handleProductChange(value, formData.customerId);
-        }
+        // Sem lógica de produto no novo contrato
 
         // Limpar erro do campo
         if (fieldErrors[field]) {
@@ -153,49 +86,18 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
         }
     };
 
-    // Buscar preço específico quando produto for alterado e cliente já estiver selecionado
-    const handleProductChange = async (productId: string, customerId: string) => {
-        if (!productId || !customerId) return;
-
-        try {
-            const specificPrice = await salesService.getProductPriceByCustomer(
-                productId,
-                customerId
-            );
-
-            const selectedProduct = products.find(p => p.id === productId);
-            const finalPrice = specificPrice !== null ? specificPrice : (selectedProduct?.price || 0);
-
-            setFormData(prev => ({
-                ...prev,
-                price: finalPrice,
-                totalValue: finalPrice * prev.quantity
-            }));
-        } catch (err) {
-            console.error('Erro ao buscar preço específico:', err);
-            const selectedProduct = products.find(p => p.id === productId);
-            setFormData(prev => ({
-                ...prev,
-                price: selectedProduct?.price || 0,
-                totalValue: (selectedProduct?.price || 0) * prev.quantity
-            }));
-        }
-    };
+    // Removido: lógica de preço por produto/cliente
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             setSelectedFile(file);
-            setFormData(prev => ({ ...prev, file }));
+            setFormData(prev => ({ ...prev, receipt: file }));
         }
     };
 
     const validateForm = (): boolean => {
         const errors: Record<string, string> = {};
-
-        if (!formData.productId) {
-            errors.productId = 'Produto é obrigatório';
-        }
 
         if (!formData.customerId) {
             errors.customerId = 'Cliente é obrigatório';
@@ -205,8 +107,8 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
             errors.quantity = 'Quantidade deve ser maior que zero';
         }
 
-        if (!formData.price || formData.price <= 0) {
-            errors.price = 'Preço deve ser maior que zero';
+        if (!formData.unitPrice || formData.unitPrice <= 0) {
+            errors.unitPrice = 'Preço deve ser maior que zero';
         }
 
         if (!formData.saleDate) {
@@ -252,13 +154,11 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
 
     const resetForm = () => {
         setFormData({
-            productId: products.length > 0 ? products[0].id : '',
             customerId: '',
             quantity: 1,
-            price: products.length > 0 ? products[0].price || 0 : 0,
-            totalValue: products.length > 0 ? products[0].price || 0 : 0,
+            unitPrice: 0,
             saleDate: new Date().toISOString().split('T')[0],
-            file: undefined,
+            receipt: undefined,
         });
         setSelectedFile(null);
         setError(null);
@@ -289,27 +189,6 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
 
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={3}>
-                    {/* Produto */}
-                    <Grid item xs={12} md={6}>
-                        <FormControl fullWidth error={!!fieldErrors.productId}>
-                            <InputLabel>Produto</InputLabel>
-                            <Select
-                                value={formData.productId}
-                                label="Produto"
-                                onChange={(e) => handleInputChange('productId', e.target.value)}
-                            >
-                                {products.map((product) => (
-                                    <MenuItem key={product.id} value={product.id}>
-                                        {product.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                            {fieldErrors.productId && (
-                                <FormHelperText>{fieldErrors.productId}</FormHelperText>
-                            )}
-                        </FormControl>
-                    </Grid>
-
                     {/* Cliente */}
                     <Grid item xs={12} md={6}>
                         <FormControl fullWidth error={!!fieldErrors.customerId}>
@@ -321,7 +200,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
                             >
                                 {customers.map((customer) => (
                                     <MenuItem key={customer.id} value={customer.id}>
-                                        {customer.name} ({customer.type === 'INDIVIDUAL' ? 'PF' : 'PJ'})
+                                        {customer.name}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -355,35 +234,25 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
                         />
                     </Grid>
 
-                    {/* Preço */}
+                    {/* Preço Unitário */}
                     <Grid item xs={12} md={4}>
                         <TextField
                             fullWidth
                             label="Preço Unitário"
                             type="number"
-                            value={formData.price || ''}
+                            value={formData.unitPrice || ''}
                             onChange={(e) => {
-                                const value = parseFloat(e.target.value);
-                                handleInputChange('price', isNaN(value) ? 0 : value);
+                                const raw = String(e.target.value).replace(',', '.');
+                                const value = parseFloat(raw);
+                                handleInputChange('unitPrice', isNaN(value) ? 0 : value);
                             }}
-                            error={!!fieldErrors.price}
-                            helperText={fieldErrors.price || 'Digite o preço unitário'}
+                            error={!!fieldErrors.unitPrice}
+                            helperText={fieldErrors.unitPrice || 'Digite o preço unitário'}
                             inputProps={{ min: 0, step: 0.01 }}
                             required
                         />
                     </Grid>
 
-                    {/* Valor Total */}
-                    <Grid item xs={12} md={4}>
-                        <TextField
-                            fullWidth
-                            label="Valor Total"
-                            type="number"
-                            value={isNaN(formData.totalValue) ? '0.00' : formData.totalValue.toFixed(2)}
-                            InputProps={{ readOnly: true }}
-                            helperText="Calculado automaticamente"
-                        />
-                    </Grid>
 
                     {/* Data da Venda */}
                     <Grid item xs={12} md={6}>
@@ -400,7 +269,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
                         />
                     </Grid>
 
-                    {/* Anexo PDF */}
+                    {/* Recibo PDF (Opcional) */}
                     <Grid item xs={12} md={6}>
                         <Box>
                             <input
@@ -418,7 +287,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
                                     fullWidth
                                     sx={{ mb: 1 }}
                                 >
-                                    {selectedFile ? selectedFile.name : 'Anexar PDF (Opcional)'}
+                                    {selectedFile ? selectedFile.name : 'Anexar Recibo PDF (Opcional)'}
                                 </Button>
                             </label>
                             {selectedFile && (

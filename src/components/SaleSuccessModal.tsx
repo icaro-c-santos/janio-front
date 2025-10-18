@@ -18,7 +18,6 @@ interface SaleSuccessModalProps {
     open: boolean;
     onClose: () => void;
     saleData: CreateSaleRequest | null;
-    productName?: string;
     customerName?: string;
 }
 
@@ -26,7 +25,6 @@ const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({
     open,
     onClose,
     saleData,
-    productName = 'Produto',
     customerName = 'Cliente',
 }) => {
     if (!saleData) return null;
@@ -41,6 +39,8 @@ const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
+
+    const totalValue = (saleData.quantity || 0) * (saleData.unitPrice || 0);
 
     return (
         <Dialog
@@ -74,15 +74,6 @@ const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Typography variant="body2" color="text.secondary">
-                                Produto:
-                            </Typography>
-                            <Typography variant="body2" fontWeight="medium">
-                                {productName}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2" color="text.secondary">
                                 Cliente:
                             </Typography>
                             <Typography variant="body2" fontWeight="medium">
@@ -95,7 +86,7 @@ const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({
                                 Data da Venda:
                             </Typography>
                             <Typography variant="body2" fontWeight="medium">
-                                {formatDate(saleData.saleDate)}
+                                {saleData.saleDate ? formatDate(saleData.saleDate) : '-'}
                             </Typography>
                         </Box>
 
@@ -113,18 +104,9 @@ const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({
                                 Preço Unitário:
                             </Typography>
                             <Typography variant="body2" fontWeight="medium">
-                                {formatCurrency(saleData.price)}
+                                {formatCurrency(saleData.unitPrice)}
                             </Typography>
                         </Box>
-
-                        {saleData.file && (
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Anexo:
-                                </Typography>
-                                <Chip label="PDF" size="small" color="primary" />
-                            </Box>
-                        )}
 
                         <Divider sx={{ my: 1 }} />
 
@@ -133,7 +115,7 @@ const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({
                                 Valor Total:
                             </Typography>
                             <Typography variant="h6" color="success.main" fontWeight="bold">
-                                {formatCurrency(saleData.totalValue)}
+                                {formatCurrency(totalValue)}
                             </Typography>
                         </Box>
                     </Box>

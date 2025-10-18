@@ -11,18 +11,16 @@ import {
     TableHead,
     TableRow,
     Chip,
-    IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     Alert,
     CircularProgress,
     Pagination,
+    TextField,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 import CustomerForm from '../components/CustomerForm';
-import MobileCustomerForm from '../components/MobileCustomerForm';
-import MobileCustomerCard from '../components/MobileCustomerCard';
 import { customersService, Customer } from '../services/customersService';
 import { useMobile } from '../hooks/useMobile';
 
@@ -35,6 +33,7 @@ const Customers: React.FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [search, setSearch] = useState('');
     const pageSize = 10;
 
     const loadCustomers = async (pageNumber: number = 1) => {
@@ -42,16 +41,11 @@ const Customers: React.FC = () => {
         setError(null);
 
         try {
-            const response = await customersService.getAllCustomers(pageNumber, pageSize);
-
-            if (response.success && response.data) {
-                setCustomers(response.data.items);
-                setTotalItems(response.data.total);
-                setTotalPages(Math.ceil(response.data.total / pageSize));
-                setPage(response.data.page);
-            } else {
-                setError(response.error || 'Erro ao carregar clientes');
-            }
+            const data = await customersService.getAllCustomers();
+            setCustomers(data);
+            setTotalItems(data.length);
+            setTotalPages(Math.max(1, Math.ceil(data.length / pageSize)));
+            setPage(pageNumber);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar clientes';
 
@@ -73,7 +67,7 @@ const Customers: React.FC = () => {
     }, []);
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-        loadCustomers(value);
+        setPage(value);
     };
 
     const handleFormSuccess = () => {
@@ -85,45 +79,37 @@ const Customers: React.FC = () => {
         setShowForm(false);
     };
 
-    const formatPhone = (customer: Customer) => {
-        const phone = customer.user.primaryPhone;
-        if (!phone || !phone.areaCode || !phone.number) {
-            return 'Não informado';
-        }
-        return `(${phone.areaCode}) ${phone.number}`;
-    };
-
-    const formatDocument = (customer: Customer) => {
-        if (customer.user.type === 'INDIVIDUAL' && customer.user.individual) {
-            return customer.user.individual.cpf;
-        } else if (customer.user.type === 'COMPANY' && customer.user.company) {
-            return customer.user.company.cnpj;
-        }
-        return '-';
-    };
-
-    const getCustomerName = (customer: Customer) => {
-        if (customer.user.type === 'INDIVIDUAL' && customer.user.individual) {
-            return customer.user.individual.fullName;
-        } else if (customer.user.type === 'COMPANY' && customer.user.company) {
-            return customer.user.company.legalName;
-        }
-        return '-';
-    };
+    const filtered = customers.filter(c => {
+        const q = search.trim().toLowerCase();
+        if (!q) return true;
+        return (
+            c.name.toLowerCase().includes(q) ||
+            (c.email ? c.email.toLowerCase().includes(q) : false)
+        );
+    });
+    const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2, flexWrap: 'wrap' }}>
                 <Typography variant="h4" component="h1">
                     Clientes
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setShowForm(true)}
-                >
-                    Novo Cliente
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <TextField
+                        size="small"
+                        placeholder="Buscar por nome ou email"
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                    />
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setShowForm(true)}
+                    >
+                        Novo Cliente
+                    </Button>
+                </Box>
             </Box>
 
             {error && (
@@ -151,7 +137,7 @@ const Customers: React.FC = () => {
                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                             <CircularProgress />
                         </Box>
-                    ) : customers.length === 0 ? (
+                    ) : filtered.length === 0 ? (
                         <Paper sx={{ p: 3, textAlign: 'center' }}>
                             <Typography variant="body1" color="text.secondary">
                                 Nenhum cliente encontrado
@@ -159,19 +145,18 @@ const Customers: React.FC = () => {
                         </Paper>
                     ) : (
                         <>
-                            {customers.map((customer) => (
-                                <MobileCustomerCard
-                                    key={customer.userId}
-                                    customer={customer}
-                                    onEdit={() => {/* TODO: Implementar edição */ }}
-                                    onDelete={() => {/* TODO: Implementar exclusão */ }}
-                                />
+                            {paged.map((customer) => (
+                                <Paper key={customer.id} sx={{ p: 2, mb: 2 }}>
+                                    <Typography variant="subtitle1">{customer.name}</Typography>
+                                    <Typography variant="body2" color="text.secondary">{customer.email || 'Sem email'}</Typography>
+                                    <Chip label={customer.type === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'} size="small" sx={{ mt: 1 }} />
+                                </Paper>
                             ))}
 
-                            {totalPages > 1 && (
+                            {Math.ceil(filtered.length / pageSize) > 1 && (
                                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
                                     <Pagination
-                                        count={totalPages}
+                                        count={Math.ceil(filtered.length / pageSize)}
                                         page={page}
                                         onChange={handlePageChange}
                                         color="primary"
@@ -189,55 +174,35 @@ const Customers: React.FC = () => {
                         <Table>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>Nome/Razão Social</TableCell>
+                                    <TableCell>Nome</TableCell>
                                     <TableCell>Email</TableCell>
-                                    <TableCell>Documento</TableCell>
                                     <TableCell>Tipo</TableCell>
-                                    <TableCell>Telefone</TableCell>
-                                    <TableCell>Cidade</TableCell>
-                                    <TableCell>Ações</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} align="center">
+                                        <TableCell colSpan={3} align="center">
                                             <CircularProgress />
                                         </TableCell>
                                     </TableRow>
-                                ) : customers.length === 0 ? (
+                                ) : filtered.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} align="center">
+                                        <TableCell colSpan={3} align="center">
                                             Nenhum cliente encontrado
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    customers.map((customer) => (
-                                        <TableRow key={customer.userId} hover>
-                                            <TableCell>{getCustomerName(customer)}</TableCell>
-                                            <TableCell>{customer.user.email || 'Não informado'}</TableCell>
-                                            <TableCell>{formatDocument(customer)}</TableCell>
+                                    paged.map((customer) => (
+                                        <TableRow key={customer.id} hover>
+                                            <TableCell>{customer.name}</TableCell>
+                                            <TableCell>{customer.email || 'Não informado'}</TableCell>
                                             <TableCell>
                                                 <Chip
-                                                    label={customer.user.type === 'INDIVIDUAL' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-                                                    color={customer.user.type === 'INDIVIDUAL' ? 'primary' : 'secondary'}
+                                                    label={customer.type === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                                                    color={customer.type === 'PF' ? 'primary' : 'secondary'}
                                                     size="small"
                                                 />
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatPhone(customer)}
-                                                {customer.user.primaryPhone?.isWhatsapp && (
-                                                    <Chip label="WhatsApp" size="small" color="success" sx={{ ml: 1 }} />
-                                                )}
-                                            </TableCell>
-                                            <TableCell>{customer.user.primaryAddress.city}</TableCell>
-                                            <TableCell>
-                                                <IconButton size="small" color="primary">
-                                                    <EditIcon />
-                                                </IconButton>
-                                                <IconButton size="small" color="error">
-                                                    <DeleteIcon />
-                                                </IconButton>
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -246,10 +211,10 @@ const Customers: React.FC = () => {
                         </Table>
                     </TableContainer>
 
-                    {totalPages > 1 && (
+                    {Math.ceil(filtered.length / pageSize) > 1 && (
                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
                             <Pagination
-                                count={totalPages}
+                                count={Math.ceil(filtered.length / pageSize)}
                                 page={page}
                                 onChange={handlePageChange}
                                 color="primary"
@@ -268,17 +233,10 @@ const Customers: React.FC = () => {
             >
                 {!isMobile && <DialogTitle>Cadastrar Novo Cliente</DialogTitle>}
                 <DialogContent sx={{ p: isMobile ? 0 : 2 }}>
-                    {isMobile ? (
-                        <MobileCustomerForm
-                            onSuccess={handleFormSuccess}
-                            onCancel={handleFormCancel}
-                        />
-                    ) : (
-                        <CustomerForm
-                            onSuccess={handleFormSuccess}
-                            onCancel={handleFormCancel}
-                        />
-                    )}
+                    <CustomerForm
+                        onSuccess={handleFormSuccess}
+                        onCancel={handleFormCancel}
+                    />
                 </DialogContent>
             </Dialog>
         </Box>

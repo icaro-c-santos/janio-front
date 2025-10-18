@@ -6,7 +6,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import Customers from './pages/Customers';
 import Home from './pages/Home';
-import Products from './pages/Products';
 import Sales from './pages/Sales';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
@@ -45,13 +44,6 @@ function App() {
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
                                         <Customers />
-                                    </ResponsiveLayout>
-                                </PrivateRoute>
-                            } />
-                            <Route path="/products" element={
-                                <PrivateRoute requiredRole="admin">
-                                    <ResponsiveLayout>
-                                        <Products />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
