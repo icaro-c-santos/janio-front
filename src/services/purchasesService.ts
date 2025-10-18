@@ -7,7 +7,6 @@ export interface PurchaseListItem {
   unitPrice: number | string;
   quantity: number;
   totalValue: number | string;
-  total: number | string;
   supplierId?: string | null;
   supplierName?: string | null;
   supplierEmail?: string | null;

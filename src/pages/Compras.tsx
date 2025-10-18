@@ -142,7 +142,7 @@ const Compras: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">{row.quantity}</TableCell>
                   <TableCell align="right">{Number(row.unitPrice ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right">{Number(row.total ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(row.totalValue ?? 0).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
