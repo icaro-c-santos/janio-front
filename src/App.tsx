@@ -13,7 +13,7 @@ import Login from './pages/Login';
 import ResponsiveLayout from './components/ResponsiveLayout';
 import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/ToastContainer';
-import Compras from './pages/Compras';
+import Compras from './pages/compras/index';
 
 const theme = createTheme({
     palette: {

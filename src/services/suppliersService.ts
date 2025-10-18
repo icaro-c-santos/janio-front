@@ -26,6 +26,17 @@ class SuppliersService {
   async listAll(): Promise<Supplier[]> {
     return this.makeRequest<Supplier[]>(`/suppliers`);
   }
+
+  async search(query: { name?: string; email?: string }): Promise<Supplier[]> {
+    // Backend applies filters with AND when both name and email are sent.
+    // To behave like ILIKE over name OR email, only send ONE param.
+    const raw = query.name ?? query.email ?? '';
+    const useEmail = /@|\./.test(raw);
+    const params: Record<string, string> = {};
+    if (useEmail) params.email = raw; else params.name = raw;
+    const qs = '?' + new URLSearchParams(params).toString();
+    return this.makeRequest<Supplier[]>(`/suppliers${qs}`);
+  }
 }
 
 export const suppliersService = new SuppliersService();

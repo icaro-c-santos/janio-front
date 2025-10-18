@@ -19,6 +19,21 @@ export interface PaginatedPurchases {
   pageSize: number;
 }
 
+export interface PurchaseDetails extends PurchaseListItem {
+  receiptDownloadUrl?: string;
+  description?: string;
+}
+
+export interface CreatePurchaseRequest {
+  itemType: string;
+  purchaseDate: string;
+  unitPrice: number;
+  quantity: number;
+  supplierId: string;
+  dueDate: string;
+  description?: string;
+}
+
 class PurchasesService {
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -53,6 +68,32 @@ class PurchasesService {
 
   async listItemTypes(): Promise<string[]> {
     return this.makeRequest<string[]>(`/inventory/item-types`);
+  }
+
+  async create(payload: CreatePurchaseRequest, receipt?: File): Promise<PurchaseDetails> {
+    if (receipt) {
+      const form = new FormData();
+      form.append('itemType', payload.itemType);
+      form.append('purchaseDate', payload.purchaseDate);
+      form.append('unitPrice', String(payload.unitPrice));
+      form.append('quantity', String(payload.quantity));
+      form.append('supplierId', payload.supplierId);
+      form.append('dueDate', payload.dueDate);
+      if (payload.description) form.append('description', payload.description);
+      form.append('receipt', receipt);
+      return this.makeRequest<PurchaseDetails>(`/inventory/purchases`, {
+        method: 'POST',
+        body: form,
+      });
+    }
+    return this.makeRequest<PurchaseDetails>(`/inventory/purchases`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getById(id: string): Promise<PurchaseDetails> {
+    return this.makeRequest<PurchaseDetails>(`/inventory/purchases/${id}`);
   }
 }
 
