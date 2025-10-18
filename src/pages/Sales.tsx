@@ -8,6 +8,7 @@ import {
   DialogContent,
   Alert,
   CircularProgress,
+  TextField,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import SalesForm from '../components/SalesForm';
@@ -38,6 +39,11 @@ const Sales: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 20;
 
+  // Filtros
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [customerQuery, setCustomerQuery] = useState<string>('');
+
   // Estados para modal de detalhes
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
@@ -48,7 +54,13 @@ const Sales: React.FC = () => {
     setError(null);
 
     try {
-      const response = await salesService.getAllSales({ page: pageNumber, pageSize });
+      const response = await salesService.getAllSales({
+        page: pageNumber,
+        pageSize,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        customerQuery: customerQuery || undefined,
+      });
       setSales(response.items || []);
       const total = response.total || 0;
       setTotalItems(total);
@@ -186,6 +198,40 @@ const Sales: React.FC = () => {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Total de {totalItems} venda(s) encontrada(s)
         </Typography>
+
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mb: 1 }}>
+          <TextField
+            type="date"
+            label="Data inicial"
+            size="small"
+            InputLabelProps={{ shrink: true }}
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
+          <TextField
+            type="date"
+            label="Data final"
+            size="small"
+            InputLabelProps={{ shrink: true }}
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+          <TextField
+            label="Cliente (nome/email)"
+            placeholder="Ex: Maria ou maria@email.com"
+            size="small"
+            value={customerQuery}
+            onChange={(e) => setCustomerQuery(e.target.value)}
+            sx={{ minWidth: 260 }}
+          />
+          <Button variant="contained" onClick={() => loadSales(1)}>Aplicar</Button>
+          <Button
+            variant="text"
+            onClick={() => { setDateFrom(''); setDateTo(''); setCustomerQuery(''); loadSales(1); }}
+          >
+            Limpar
+          </Button>
+        </Box>
       </Box>
 
       {isMobile ? (

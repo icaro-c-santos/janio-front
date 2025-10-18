@@ -17,6 +17,8 @@ export interface Sale {
   saleDate: string;
   receiptFileKey?: string | null;
   receiptDownloadUrl?: string;
+  customerName?: string;
+  customerEmail?: string;
 }
 
 export interface ApiResponse<T> {

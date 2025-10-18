@@ -4,7 +4,6 @@ import {
     CardContent,
     Typography,
     Box,
-    Chip,
     Divider,
     IconButton,
     Tooltip,
@@ -29,28 +28,12 @@ const MobileSalesCard: React.FC<MobileSalesCardProps> = ({ sale, onClick }) => {
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
-    const getCustomerName = (sale: Sale) => {
-        if (sale.customer?.user) {
-            if (sale.customer.user.type === 'INDIVIDUAL') {
-                return sale.customer.user.individual?.fullName || 'Nome não informado';
-            } else {
-                return sale.customer.user.company?.legalName || 'Razão social não informada';
-            }
-        }
-        return 'Cliente não encontrado';
-    };
-
-    const getProductName = (sale: Sale) => {
-        if (sale.product) {
-            return sale.product.name;
-        }
-        return 'Produto não encontrado';
-    };
+    const getCustomerName = (sale: Sale) => sale.customerName || 'Cliente não informado';
 
     const handleDownloadReceipt = (e: React.MouseEvent) => {
         e.stopPropagation(); // Previne que o clique abra o modal de detalhes
-        if (sale.receiptFileUrl) {
-            window.open(sale.receiptFileUrl, '_blank');
+        if (sale.receiptDownloadUrl) {
+            window.open(sale.receiptDownloadUrl, '_blank');
         }
     };
 
@@ -68,10 +51,10 @@ const MobileSalesCard: React.FC<MobileSalesCardProps> = ({ sale, onClick }) => {
             <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                     <Typography variant="h6" component="div" color="primary">
-                        {formatCurrency(sale.totalPrice)}
+                        {formatCurrency(Number(sale.totalPrice))}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {sale.receiptFileUrl && (
+                        {sale.receiptDownloadUrl && (
                             <Tooltip title="Baixar comprovante">
                                 <IconButton
                                     size="small"
@@ -82,16 +65,11 @@ const MobileSalesCard: React.FC<MobileSalesCardProps> = ({ sale, onClick }) => {
                                 </IconButton>
                             </Tooltip>
                         )}
-                        <Chip
-                            label="Concluída"
-                            size="small"
-                            color="success"
-                        />
                     </Box>
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {formatDate(sale.saleDate)} • Criada em {formatDate(sale.createdAt)}
+                    {formatDate(sale.saleDate)}
                 </Typography>
 
                 <Box sx={{ mb: 2 }}>
@@ -102,23 +80,7 @@ const MobileSalesCard: React.FC<MobileSalesCardProps> = ({ sale, onClick }) => {
                         <Typography variant="body2">
                             {getCustomerName(sale)}
                         </Typography>
-                        {sale.customer?.user && (
-                            <Chip
-                                label={sale.customer.user.type === 'INDIVIDUAL' ? 'PF' : 'PJ'}
-                                size="small"
-                                color={sale.customer.user.type === 'INDIVIDUAL' ? 'primary' : 'secondary'}
-                            />
-                        )}
                     </Box>
-                </Box>
-
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                        Produto
-                    </Typography>
-                    <Typography variant="body2">
-                        {getProductName(sale)}
-                    </Typography>
                 </Box>
 
                 <Divider sx={{ my: 1 }} />
@@ -138,7 +100,7 @@ const MobileSalesCard: React.FC<MobileSalesCardProps> = ({ sale, onClick }) => {
                             Preço Unit.
                         </Typography>
                         <Typography variant="body1" fontWeight="medium">
-                            {formatCurrency(sale.unitPrice)}
+                            {formatCurrency(Number(sale.unitPrice))}
                         </Typography>
                     </Box>
                 </Box>

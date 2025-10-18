@@ -46,7 +46,7 @@ const SalesList: React.FC<SalesListProps> = ({
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
-    const getCustomerName = (sale: Sale) => `Cliente ${sale.customerId.slice(0, 8)}`;
+    const getCustomerName = (sale: Sale) => sale.customerName || `Cliente ${sale.customerId.slice(0, 8)}`;
 
     const handleDownloadReceipt = (e: React.MouseEvent, sale: Sale) => {
         e.stopPropagation(); // Previne que o clique abra o modal de detalhes
@@ -66,20 +66,19 @@ const SalesList: React.FC<SalesListProps> = ({
                             <TableCell>Quantidade</TableCell>
                             <TableCell>Preço Unit.</TableCell>
                             <TableCell>Total</TableCell>
-                            <TableCell>Status</TableCell>
                             <TableCell align="center">Ações</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={8} align="center">
+                                <TableCell colSpan={6} align="center">
                                     <CircularProgress />
                                 </TableCell>
                             </TableRow>
                         ) : sales.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} align="center">
+                                <TableCell colSpan={6} align="center">
                                     <Typography variant="body1" color="text.secondary">
                                         Nenhuma venda encontrada
                                     </Typography>
@@ -125,13 +124,6 @@ const SalesList: React.FC<SalesListProps> = ({
                                         <Typography variant="body2" fontWeight="medium" color="primary">
                                             {formatCurrency(Number(sale.totalPrice))}
                                         </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label="Concluída"
-                                            size="small"
-                                            color="success"
-                                        />
                                     </TableCell>
                                     <TableCell align="center">
                                         {sale.receiptDownloadUrl && (
