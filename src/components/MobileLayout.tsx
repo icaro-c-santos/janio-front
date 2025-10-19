@@ -39,6 +39,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
         { label: 'Produtos', path: '/products', icon: <InventoryIcon /> },
         { label: 'Vendas', path: '/sales', icon: <ShoppingCartIcon /> },
         { label: 'Compras', path: '/compras', icon: <ShoppingCartIcon /> },
+        { label: 'Fornecedores', path: '/fornecedores', icon: <PeopleIcon /> },
         { label: 'Relatórios', path: '/reports', icon: <AssessmentIcon /> },
     ];
 

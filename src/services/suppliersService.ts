@@ -37,6 +37,19 @@ class SuppliersService {
     const qs = '?' + new URLSearchParams(params).toString();
     return this.makeRequest<Supplier[]>(`/suppliers${qs}`);
   }
+
+  async list(query?: string): Promise<Supplier[]> {
+    const q = (query || '').trim();
+    if (!q) return this.listAll();
+    return this.search({ name: q, email: q });
+  }
+
+  async create(payload: { name: string; email?: string }): Promise<Supplier> {
+    return this.makeRequest<Supplier>(`/suppliers`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 export const suppliersService = new SuppliersService();

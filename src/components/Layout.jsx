@@ -121,6 +121,23 @@ const Layout = ({ children }) => {
                 🛒 Compras
               </Link>
               <Link
+                to="/fornecedores"
+                style={{
+                  display: "block",
+                  padding: "15px 20px",
+                  color: "white",
+                  textDecoration: "none",
+                  backgroundColor: isActive("/fornecedores")
+                    ? "#4CAF50"
+                    : "transparent",
+                  borderLeft: isActive("/fornecedores")
+                    ? "4px solid #4CAF50"
+                    : "4px solid transparent",
+                }}
+              >
+                🧾 Fornecedores
+              </Link>
+              <Link
                 to="/reports"
                 style={{
                   display: "block",
@@ -157,7 +174,9 @@ const Layout = ({ children }) => {
             {user?.name}
           </div>
           <div style={{ fontSize: "12px", color: "#bdc3c7" }}>
-            {String(user?.role || "").toLowerCase() === "admin" ? "Administrador" : "Cliente"}
+            {String(user?.role || "").toLowerCase() === "admin"
+              ? "Administrador"
+              : "Cliente"}
           </div>
           <button
             onClick={logout}
@@ -206,6 +225,7 @@ const Layout = ({ children }) => {
             {location.pathname === "/customers" && "Clientes"}
             {location.pathname === "/sales" && "Vendas"}
             {location.pathname === "/compras" && "Compras"}
+            {location.pathname === "/fornecedores" && "Fornecedores"}
           </h1>
         </header>
 

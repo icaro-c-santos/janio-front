@@ -14,6 +14,7 @@ import ResponsiveLayout from './components/ResponsiveLayout';
 import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/ToastContainer';
 import Compras from './pages/compras/index';
+import Fornecedores from './pages/fornecedores';
 
 const theme = createTheme({
     palette: {
@@ -67,6 +68,13 @@ function App() {
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
                                         <Estoque />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/fornecedores" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <Fornecedores />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
