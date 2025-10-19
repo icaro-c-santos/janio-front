@@ -48,7 +48,7 @@ const Sidebar = ({ open, onClose }) => {
         {
           text: "Vendas",
           icon: <VendasIcon />,
-          path: "/sales",
+          path: "/vendas",
           permission: "vendas",
         },
         {

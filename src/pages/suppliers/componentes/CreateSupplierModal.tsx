@@ -7,7 +7,7 @@ interface Props {
   onSubmit: (payload: { name: string; email?: string }) => Promise<void>;
 }
 
-const ModalCriarFornecedor: React.FC<Props> = ({ open, onClose, onSubmit }) => {
+const CreateSupplierModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -71,4 +71,4 @@ const ModalCriarFornecedor: React.FC<Props> = ({ open, onClose, onSubmit }) => {
   );
 };
 
-export default ModalCriarFornecedor;
+export default CreateSupplierModal;

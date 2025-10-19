@@ -1,12 +1,12 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 
-const Layout = ({ children }) => {
+const Layout = ({ children }: { children: ReactNode }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path: any) => location.pathname === path;
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -26,27 +26,27 @@ const Layout = ({ children }) => {
         <div
           style={{
             textAlign: "center",
-            padding: "20px",
+            padding: "16px 20px",
             borderBottom: "1px solid #34495e",
           }}
         >
           <div
             style={{
-              width: "60px",
-              height: "60px",
+              width: "36px",
+              height: "36px",
               backgroundColor: "#4CAF50",
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              margin: "0 auto 10px",
-              fontSize: "1.5rem",
+              margin: "0 auto 8px",
+              fontSize: "1.1rem",
               fontWeight: "bold",
             }}
           >
             J
           </div>
-          <h3 style={{ margin: "0", fontSize: "1.2rem" }}>Janio ERP</h3>
+          <h3 style={{ margin: "0", fontSize: "1rem" }}>Janio ERP</h3>
         </div>
 
         {/* Menu */}
@@ -87,16 +87,16 @@ const Layout = ({ children }) => {
                 👥 Clientes
               </Link>
               <Link
-                to="/sales"
+                to="/vendas"
                 style={{
                   display: "block",
                   padding: "15px 20px",
                   color: "white",
                   textDecoration: "none",
-                  backgroundColor: isActive("/sales")
+                  backgroundColor: isActive("/vendas")
                     ? "#4CAF50"
                     : "transparent",
-                  borderLeft: isActive("/sales")
+                  borderLeft: isActive("/vendas")
                     ? "4px solid #4CAF50"
                     : "4px solid transparent",
                 }}
@@ -154,47 +154,28 @@ const Layout = ({ children }) => {
               >
                 📊 Relatórios
               </Link>
+              {/* Logout as a small button at the end of the menu */}
+              <button
+                onClick={logout}
+                style={{
+                  display: "block",
+                  width: "calc(100% - 40px)",
+                  margin: "16px 20px 0 20px",
+                  padding: "8px 12px",
+                  backgroundColor: "#e74c3c",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  textAlign: "center",
+                }}
+              >
+                Sair
+              </button>
             </>
           )}
         </nav>
-
-        {/* User Info */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "20px",
-            left: "20px",
-            right: "20px",
-            padding: "15px",
-            backgroundColor: "#34495e",
-            borderRadius: "8px",
-          }}
-        >
-          <div style={{ fontSize: "14px", marginBottom: "5px" }}>
-            {user?.name}
-          </div>
-          <div style={{ fontSize: "12px", color: "#bdc3c7" }}>
-            {String(user?.role || "").toLowerCase() === "admin"
-              ? "Administrador"
-              : "Cliente"}
-          </div>
-          <button
-            onClick={logout}
-            style={{
-              marginTop: "10px",
-              padding: "8px 16px",
-              backgroundColor: "#e74c3c",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "12px",
-              width: "100%",
-            }}
-          >
-            Sair
-          </button>
-        </div>
       </div>
 
       {/* Main Content */}
@@ -222,8 +203,8 @@ const Layout = ({ children }) => {
             }}
           >
             {location.pathname === "/" && "Dashboard"}
-            {location.pathname === "/customers" && "Clientes"}
-            {location.pathname === "/sales" && "Vendas"}
+            {location.pathname === "/clientes" && "Clientes"}
+            {location.pathname === "/vendas" && "Vendas"}
             {location.pathname === "/compras" && "Compras"}
             {location.pathname === "/fornecedores" && "Fornecedores"}
           </h1>

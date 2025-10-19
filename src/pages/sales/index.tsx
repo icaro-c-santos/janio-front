@@ -11,18 +11,18 @@ import {
   TextField,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import SalesForm from '../components/SalesForm';
-import SalesList from '../components/SalesList';
-import SaleConfirmationModal from '../components/SaleConfirmationModal';
-import SaleSuccessModal from '../components/SaleSuccessModal';
-import SaleDetailsModal from '../components/SaleDetailsModal';
-import MobileSalesForm from '../components/MobileSalesForm';
-import MobileSalesCard from '../components/MobileSalesCard';
-import { salesService, Sale, CreateSaleRequest } from '../services/salesService';
-import { useToast } from '../contexts/ToastContext';
-import { useMobile } from '../hooks/useMobile';
+import SalesForm from './componentes/SalesForm';
+import SalesList from './componentes/SalesList';
+import SaleConfirmationModal from './componentes/SaleConfirmationModal';
+import SaleSuccessModal from './componentes/SaleSuccessModal';
+import MobileSalesForm from './componentes/MobileSalesForm';
+import { salesService, Sale, CreateSaleRequest, PaginatedResponse } from '../../services/salesService';
+import { useToast } from '../../contexts/ToastContext';
+import { useMobile } from '../../hooks/useMobile';
+import MobileSalesCard from '../sales/componentes/MobileSalesCard';
+import SaleDetailsModal from '../sales/componentes/SaleDetailsModal';
 
-const Sales: React.FC = () => {
+const SalesPage: React.FC = () => {
   const { success: showSuccess, error: showError } = useToast();
   const isMobile = useMobile();
 
@@ -54,18 +54,20 @@ const Sales: React.FC = () => {
     setError(null);
 
     try {
-      const response = await salesService.getAllSales({
+      const response: PaginatedResponse<Sale> = await salesService.getAllSales({
         page: pageNumber,
         pageSize,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         customerQuery: customerQuery || undefined,
       });
-      setSales(response.items || []);
-      const total = response.total || 0;
+
+      const data = response.data;
+      setSales(data?.items || []);
+      const total = data?.total || 0;
       setTotalItems(total);
       setTotalPages(Math.ceil(total / pageSize));
-      setPage(response.page || pageNumber);
+      setPage(data?.page || pageNumber);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar vendas';
 
@@ -95,7 +97,7 @@ const Sales: React.FC = () => {
     setShowSuccessModal(false);
     setPendingSale(null);
     setCompletedSale(null);
-    loadSales(page); // Recarregar a página atual
+    loadSales(page);
   };
 
   const handleFormCancel = () => {
@@ -137,7 +139,6 @@ const Sales: React.FC = () => {
     setDetailsLoading(true);
 
     try {
-      // Buscar detalhes completos da venda
       const response = await salesService.getSaleById(sale.id);
       if (response.success && response.data) {
         setSelectedSale(response.data);
@@ -235,7 +236,6 @@ const Sales: React.FC = () => {
       </Box>
 
       {isMobile ? (
-        // Mobile View - Cards
         <Box>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
@@ -268,7 +268,6 @@ const Sales: React.FC = () => {
           )}
         </Box>
       ) : (
-        // Desktop View - Table
         <SalesList
           sales={sales}
           loading={loading}
@@ -278,8 +277,6 @@ const Sales: React.FC = () => {
           onSaleClick={handleSaleClick}
         />
       )}
-
-      {/* Dialog do Formulário */}
       <Dialog
         open={showForm}
         onClose={handleFormCancel}
@@ -305,7 +302,6 @@ const Sales: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Confirmação */}
       <SaleConfirmationModal
         open={showConfirmation}
         onClose={handleFormCancel}
@@ -315,7 +311,6 @@ const Sales: React.FC = () => {
         loading={loading}
       />
 
-      {/* Modal de Sucesso */}
       <SaleSuccessModal
         open={showSuccessModal}
         onClose={handleFormSuccess}
@@ -323,7 +318,6 @@ const Sales: React.FC = () => {
         customerName={completedSale ? getCustomerName(completedSale.customerId) : undefined}
       />
 
-      {/* Modal de Detalhes da Venda */}
       <SaleDetailsModal
         open={showDetailsModal}
         onClose={handleCloseDetailsModal}
@@ -334,4 +328,4 @@ const Sales: React.FC = () => {
   );
 };
 
-export default Sales;
+export default SalesPage;

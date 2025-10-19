@@ -5,11 +5,8 @@ import {
     Typography,
     Box,
     Divider,
-    IconButton,
-    Tooltip,
 } from '@mui/material';
-import { Download as DownloadIcon } from '@mui/icons-material';
-import { Sale } from '../services/salesService';
+import { Sale } from '../../../services/salesService';
 
 interface MobileSalesCardProps {
     sale: Sale;
@@ -30,13 +27,6 @@ const MobileSalesCard: React.FC<MobileSalesCardProps> = ({ sale, onClick }) => {
 
     const getCustomerName = (sale: Sale) => sale.customerName || 'Cliente não informado';
 
-    const handleDownloadReceipt = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Previne que o clique abra o modal de detalhes
-        if (sale.receiptDownloadUrl) {
-            window.open(sale.receiptDownloadUrl, '_blank');
-        }
-    };
-
     return (
         <Card
             sx={{
@@ -49,25 +39,6 @@ const MobileSalesCard: React.FC<MobileSalesCardProps> = ({ sale, onClick }) => {
             onClick={() => onClick(sale)}
         >
             <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                    <Typography variant="h6" component="div" color="primary">
-                        {formatCurrency(Number(sale.totalPrice))}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {sale.receiptDownloadUrl && (
-                            <Tooltip title="Baixar comprovante">
-                                <IconButton
-                                    size="small"
-                                    color="primary"
-                                    onClick={handleDownloadReceipt}
-                                >
-                                    <DownloadIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
-                    </Box>
-                </Box>
-
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     {formatDate(sale.saleDate)}
                 </Typography>

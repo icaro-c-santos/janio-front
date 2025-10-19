@@ -36,8 +36,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
     const menuItems = [
         { label: 'Home', path: '/', icon: <HomeIcon /> },
         { label: 'Clientes', path: '/customers', icon: <PeopleIcon /> },
-        { label: 'Produtos', path: '/products', icon: <InventoryIcon /> },
-        { label: 'Vendas', path: '/sales', icon: <ShoppingCartIcon /> },
+        { label: 'Vendas', path: '/vendas', icon: <ShoppingCartIcon /> },
         { label: 'Compras', path: '/compras', icon: <ShoppingCartIcon /> },
         { label: 'Fornecedores', path: '/fornecedores', icon: <PeopleIcon /> },
         { label: 'Relatórios', path: '/reports', icon: <AssessmentIcon /> },

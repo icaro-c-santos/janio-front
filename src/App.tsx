@@ -4,17 +4,17 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
-import Customers from './pages/Customers';
+import CustomersPage from './pages/customers/index';
 import Home from './pages/Home';
-import Sales from './pages/Sales';
-import Reports from './pages/Reports';
-import Estoque from './pages/Estoque';
+import InventoryPage from './pages/inventory';
 import Login from './pages/Login';
 import ResponsiveLayout from './components/ResponsiveLayout';
 import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/ToastContainer';
-import Compras from './pages/compras/index';
-import Fornecedores from './pages/fornecedores';
+import ReportsPage from './pages/reports';
+import SuppliersPage from './pages/suppliers';
+import InventoryPurchasesPage from './pages/purchases';
+import SalesPage from './pages/Sales';
 
 const theme = createTheme({
     palette: {
@@ -46,42 +46,42 @@ function App() {
                             <Route path="/customers" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
-                                        <Customers />
+                                        <CustomersPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
-                            <Route path="/sales" element={
+                            <Route path="/vendas" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
-                                        <Sales />
+                                        <SalesPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
                             <Route path="/compras" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
-                                        <Compras />
+                                        <InventoryPurchasesPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
                             <Route path="/estoque-movimentacoes" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
-                                        <Estoque />
+                                        <InventoryPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
                             <Route path="/fornecedores" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
-                                        <Fornecedores />
+                                        <SuppliersPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
                             <Route path="/reports" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
-                                        <Reports />
+                                        <ReportsPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />

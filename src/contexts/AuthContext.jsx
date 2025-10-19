@@ -3,6 +3,7 @@ import { API_CONFIG } from "../config/api";
 
 const AuthContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -11,6 +12,7 @@ export const useAuth = () => {
   return context;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const USER_TYPES = {
   ADMIN: "admin",
   CUSTOMER: "customer",
@@ -23,7 +25,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const u = JSON.parse(savedUser);
       const up = u?.role ? String(u.role).toUpperCase() : undefined;
-      const role = up === "ADMIN" ? "admin" : up === "CUSTOMER" ? "customer" : (u?.role || undefined);
+      const role =
+        up === "ADMIN"
+          ? "admin"
+          : up === "CUSTOMER"
+          ? "customer"
+          : u?.role || undefined;
       return { ...u, role };
     } catch {
       return null;
@@ -42,7 +49,9 @@ export const AuthProvider = ({ children }) => {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        const msg = data?.message || (res.status === 401 ? "Credenciais inválidas" : `Erro ${res.status}`);
+        const msg =
+          data?.message ||
+          (res.status === 401 ? "Credenciais inválidas" : `Erro ${res.status}`);
         return { success: false, message: msg };
       }
 

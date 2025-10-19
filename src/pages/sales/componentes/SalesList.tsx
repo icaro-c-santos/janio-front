@@ -9,14 +9,10 @@ import {
     TableHead,
     TableRow,
     Typography,
-    Chip,
     CircularProgress,
     Pagination,
-    IconButton,
-    Tooltip,
 } from '@mui/material';
-import { Download as DownloadIcon } from '@mui/icons-material';
-import { Sale } from '../services/salesService';
+import { Sale } from '../../../services/salesService';
 
 interface SalesListProps {
     sales: Sale[];
@@ -48,12 +44,6 @@ const SalesList: React.FC<SalesListProps> = ({
 
     const getCustomerName = (sale: Sale) => sale.customerName || `Cliente ${sale.customerId.slice(0, 8)}`;
 
-    const handleDownloadReceipt = (e: React.MouseEvent, sale: Sale) => {
-        e.stopPropagation(); // Previne que o clique abra o modal de detalhes
-        if (sale.receiptDownloadUrl) {
-            window.open(sale.receiptDownloadUrl, '_blank');
-        }
-    };
 
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -66,7 +56,6 @@ const SalesList: React.FC<SalesListProps> = ({
                             <TableCell>Quantidade</TableCell>
                             <TableCell>Preço Unit.</TableCell>
                             <TableCell>Total</TableCell>
-                            <TableCell align="center">Ações</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -124,19 +113,6 @@ const SalesList: React.FC<SalesListProps> = ({
                                         <Typography variant="body2" fontWeight="medium" color="primary">
                                             {formatCurrency(Number(sale.totalPrice))}
                                         </Typography>
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {sale.receiptDownloadUrl && (
-                                            <Tooltip title="Baixar comprovante">
-                                                <IconButton
-                                                    size="small"
-                                                    color="primary"
-                                                    onClick={(e) => handleDownloadReceipt(e, sale)}
-                                                >
-                                                    <DownloadIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))

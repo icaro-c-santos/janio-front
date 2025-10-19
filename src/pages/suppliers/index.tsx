@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Paper, Stack, TextField, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from '@mui/material';
 import { suppliersService, Supplier } from '../../services/suppliersService';
-import ModalCriarFornecedor from './componentes/ModalCriarFornecedor';
+import CreateSupplierModal from './componentes/CreateSupplierModal';
 
-const Fornecedores: React.FC = () => {
+const SuppliersPage: React.FC = () => {
   const [data, setData] = useState<Supplier[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -100,7 +100,7 @@ const Fornecedores: React.FC = () => {
         />
       </Paper>
 
-      <ModalCriarFornecedor
+      <CreateSupplierModal
         open={openCreate}
         onClose={() => setOpenCreate(false)}
         onSubmit={async (payload) => {
@@ -112,4 +112,4 @@ const Fornecedores: React.FC = () => {
   );
 };
 
-export default Fornecedores;
+export default SuppliersPage;

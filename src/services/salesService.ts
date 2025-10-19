@@ -19,6 +19,7 @@ export interface Sale {
   receiptDownloadUrl?: string;
   customerName?: string;
   customerEmail?: string;
+  customerType?: "PJ" | "PF";
 }
 
 export interface ApiResponse<T> {
@@ -56,7 +57,7 @@ class SalesService {
 
     // Token de autenticação
     try {
-      const token = localStorage.getItem('janio_erp_token');
+      const token = localStorage.getItem("janio_erp_token");
       if (token) {
         defaultHeaders["Authorization"] = `Bearer ${token}`;
       }
@@ -137,22 +138,40 @@ class SalesService {
   // Listar vendas (passa filtros diretamente)
   async getAllSales(
     params?: Record<string, string | number | undefined>
-  ): Promise<any> {
+  ): Promise<PaginatedResponse<Sale>> {
     const qs = params
       ? "?" +
         new URLSearchParams(
-          Object.entries(params).reduce<Record<string, string>>((acc, [k, v]) => {
-            if (v !== undefined && v !== null) acc[k] = String(v);
-            return acc;
-          }, {})
+          Object.entries(params).reduce<Record<string, string>>(
+            (acc, [k, v]) => {
+              if (v !== undefined && v !== null) acc[k] = String(v);
+              return acc;
+            },
+            {}
+          )
         ).toString()
       : "";
-    return this.makeRequest<any>(`/sales${qs}`);
+    const raw = await this.makeRequest<{
+      items: Sale[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>(`/sales${qs}`);
+    return {
+      success: true,
+      data: {
+        items: raw.items,
+        total: raw.total,
+        page: raw.page,
+        pageSize: raw.pageSize,
+      },
+    };
   }
 
   // Obter venda por ID
   async getSaleById(saleId: string): Promise<ApiResponse<Sale>> {
-    return this.makeRequest<ApiResponse<Sale>>(`/sales/${saleId}`);
+    const raw = await this.makeRequest<Sale>(`/sales/${saleId}`);
+    return { success: true, data: raw };
   }
 }
 

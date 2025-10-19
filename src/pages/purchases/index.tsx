@@ -3,9 +3,9 @@ import { Box, Paper, Stack, TextField, MenuItem, Button, Typography, TableContai
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { purchasesService, PaginatedPurchases, PurchaseListItem, CreatePurchaseRequest, PurchaseDetails } from '../../services/purchasesService';
 import { suppliersService, Supplier } from '../../services/suppliersService';
-import ModalSucess from './componentes/ModalSucess';
+import ModalSucess from './components/ModalSucess';
 
-const Compras: React.FC = () => {
+const InventoryPurchasesPage: React.FC = () => {
   const [data, setData] = useState<PaginatedPurchases | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -207,31 +207,31 @@ const Compras: React.FC = () => {
               )}
               {!loading && !error && data?.items?.map((row: PurchaseListItem) => (
                 <React.Fragment key={row.id}>
-                <TableRow
-                  hover
-                  onClick={async () => {
-                    try {
-                      const details = await purchasesService.getById(row.id);
-                      setSuccessDetails(details);
-                      setSuccessOpen(true);
-                    } catch (e: any) {
-                      setErrorMsg(e?.message || 'Erro ao carregar detalhes');
-                    }
-                  }}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <TableCell>{new Date(row.purchaseDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{row.itemType}</TableCell>
-                  <TableCell>
-                    {row.supplierName || '-'}
-                    {row.supplierEmail ? ` (${row.supplierEmail})` : ''}
-                  </TableCell>
-                  <TableCell align="right">{row.quantity}</TableCell>
-                  <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{Number(row.unitPrice ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{Number(row.totalValue ?? 0).toFixed(2)}</TableCell>
-                  
-                </TableRow>
-                
+                  <TableRow
+                    hover
+                    onClick={async () => {
+                      try {
+                        const details = await purchasesService.getById(row.id);
+                        setSuccessDetails(details);
+                        setSuccessOpen(true);
+                      } catch (e: any) {
+                        setErrorMsg(e?.message || 'Erro ao carregar detalhes');
+                      }
+                    }}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell>{new Date(row.purchaseDate).toLocaleDateString()}</TableCell>
+                    <TableCell>{row.itemType}</TableCell>
+                    <TableCell>
+                      {row.supplierName || '-'}
+                      {row.supplierEmail ? ` (${row.supplierEmail})` : ''}
+                    </TableCell>
+                    <TableCell align="right">{row.quantity}</TableCell>
+                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{Number(row.unitPrice ?? 0).toFixed(2)}</TableCell>
+                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{Number(row.totalValue ?? 0).toFixed(2)}</TableCell>
+
+                  </TableRow>
+
                 </React.Fragment>
               ))}
             </TableBody>
@@ -466,4 +466,4 @@ const Compras: React.FC = () => {
   );
 };
 
-export default Compras;
+export default InventoryPurchasesPage;

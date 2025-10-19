@@ -8,7 +8,6 @@ const Home: React.FC = () => {
 
   const quickActions = [
     { title: 'Cadastrar Cliente', description: 'Adicionar novo cliente ao sistema', path: '/customers', color: '#1976d2' },
-    { title: 'Gerenciar Produtos', description: 'Visualizar e editar produtos', path: '/products', color: '#388e3c' },
     { title: 'Registrar Venda', description: 'Criar nova venda', path: '/sales', color: '#f57c00' },
   ];
 
