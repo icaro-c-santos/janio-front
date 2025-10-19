@@ -3,8 +3,8 @@ import { Box, Paper, Stack, TextField, MenuItem, Button, Typography, TableContai
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { purchasesService, PaginatedPurchases, PurchaseListItem, CreatePurchaseRequest, PurchaseDetails } from '../../../services/purchasesService';
 import { suppliersService, Supplier } from '../../../services/suppliersService';
-import ModalSucess from './ModalSucess';
-import MobilePurchaseCard from './MobilePurchaseCard';
+import ModalSucess from '../components/ModalSucess';
+import MobilePurchaseCard from '../components/MobilePurchaseCard';
 
 const InventoryPurchasesSection: React.FC = () => {
   const [data, setData] = useState<PaginatedPurchases | null>(null);

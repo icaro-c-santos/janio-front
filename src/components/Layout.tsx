@@ -70,21 +70,21 @@ const Layout = ({ children }: { children: ReactNode }) => {
           {String(user?.role || "").toLowerCase() === "admin" && (
             <>
               <Link
-                to="/customers"
+                to="/usuarios"
                 style={{
                   display: "block",
                   padding: "15px 20px",
                   color: "white",
                   textDecoration: "none",
-                  backgroundColor: isActive("/customers")
+                  backgroundColor: isActive("/usuarios")
                     ? "#4CAF50"
                     : "transparent",
-                  borderLeft: isActive("/customers")
+                  borderLeft: isActive("/usuarios")
                     ? "4px solid #4CAF50"
                     : "4px solid transparent",
                 }}
               >
-                👥 Clientes
+                👥 Usuários
               </Link>
               <Link
                 to="/estoque"
@@ -137,23 +137,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
               >
                 💼 Financeiro
               </Link>
-              <Link
-                to="/fornecedores"
-                style={{
-                  display: "block",
-                  padding: "15px 20px",
-                  color: "white",
-                  textDecoration: "none",
-                  backgroundColor: isActive("/fornecedores")
-                    ? "#4CAF50"
-                    : "transparent",
-                  borderLeft: isActive("/fornecedores")
-                    ? "4px solid #4CAF50"
-                    : "4px solid transparent",
-                }}
-              >
-                🧾 Fornecedores
-              </Link>
+              
               <Link
                 to="/reports"
                 style={{
@@ -219,11 +203,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
               fontSize: "1.8rem",
             }}
           >
-            {location.pathname === "/" && "Dashboard"}
-            {location.pathname === "/clientes" && "Clientes"}
+            {location.pathname === "/usuarios" && "Usuários"}
             {location.pathname === "/vendas" && "Vendas"}
+            {location.pathname === "/compras" && "Compras"}
             {location.pathname === "/financeiro" && "Financeiro"}
-            {location.pathname === "/fornecedores" && "Fornecedores"}
           </h1>
         </header>
 

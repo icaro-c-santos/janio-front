@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Paper, Stack, TextField, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from '@mui/material';
-import { suppliersService, Supplier } from '../../services/suppliersService';
-import CreateSupplierModal from './componentes/CreateSupplierModal';
+import { suppliersService, Supplier } from '../../../services/suppliersService';
+import CreateSupplierModal from '../components/CreateSupplierModal';
 
-const SuppliersPage: React.FC = () => {
+const SuppliersSection: React.FC = () => {
   const [data, setData] = useState<Supplier[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -112,4 +112,4 @@ const SuppliersPage: React.FC = () => {
   );
 };
 
-export default SuppliersPage;
+export default SuppliersSection;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Paper, Tabs, Tab, Typography } from '@mui/material';
-import InventoryPurchasesPage from './components/InventoryPurchasesSection';
+import InventoryPurchasesPage from './sections/InventoryPurchasesSection';
 
 const FinancialPage: React.FC = () => {
   const [tab, setTab] = useState(0);

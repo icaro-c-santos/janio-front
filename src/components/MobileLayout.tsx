@@ -24,7 +24,7 @@ import {
     Money as MoneyIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import FinancialPage from '../pages/financial';
+// no direct page imports here; navigation uses routes
 
 interface MobileLayoutProps {
     children: React.ReactNode;
@@ -37,10 +37,9 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
 
     const menuItems = [
         { label: 'Home', path: '/', icon: <HomeIcon /> },
-        { label: 'Clientes', path: '/customers', icon: <PeopleIcon /> },
+        { label: 'Usuários', path: '/usuarios', icon: <PeopleIcon /> },
         { label: 'Estoque', path: '/estoque', icon: <InventoryIcon /> },
         { label: 'Vendas', path: '/vendas', icon: <ShoppingCartIcon /> },
-        { label: 'Fornecedores', path: '/fornecedores', icon: <PeopleIcon /> },
         { label: 'Financeiro', path: '/financeiro', icon: <MoneyIcon /> },
         { label: 'Relatórios', path: '/reports', icon: <AssessmentIcon /> },
     ];

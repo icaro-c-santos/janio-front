@@ -4,7 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
-import CustomersPage from './pages/customers/index';
+// removed: Customers and Suppliers pages now live under UsersPage tabs
 import Home from './pages/Home';
 import InventoryPage from './pages/inventory';
 import Login from './pages/Login';
@@ -12,10 +12,11 @@ import ResponsiveLayout from './components/ResponsiveLayout';
 import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/ToastContainer';
 import ReportsPage from './pages/reports';
-import SuppliersPage from './pages/suppliers';
-import InventoryPurchasesPage from './pages/financial/components/InventoryPurchasesSection';
+// removed: Suppliers page replaced by UsersPage tabs
+import InventoryPurchasesPage from './pages/financial/sections/InventoryPurchasesSection';
 import SalesPage from './pages/Sales';
 import FinancialPage from './pages/financial';
+import UsersPage from './pages/users';
 
 const theme = createTheme({
     palette: {
@@ -44,13 +45,6 @@ function App() {
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
-                            <Route path="/customers" element={
-                                <PrivateRoute requiredRole="admin">
-                                    <ResponsiveLayout>
-                                        <CustomersPage />
-                                    </ResponsiveLayout>
-                                </PrivateRoute>
-                            } />
                             <Route path="/vendas" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
@@ -72,10 +66,10 @@ function App() {
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
-                            <Route path="/fornecedores" element={
+                            <Route path="/usuarios" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
-                                        <SuppliersPage />
+                                        <UsersPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
