@@ -13,7 +13,7 @@ import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/ToastContainer';
 import ReportsPage from './pages/reports';
 import SuppliersPage from './pages/suppliers';
-import InventoryPurchasesPage from './pages/purchases';
+import InventoryPurchasesPage from './pages/financial/components/InventoryPurchasesSection';
 import SalesPage from './pages/Sales';
 import FinancialPage from './pages/financial';
 
@@ -55,13 +55,6 @@ function App() {
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
                                         <SalesPage />
-                                    </ResponsiveLayout>
-                                </PrivateRoute>
-                            } />
-                            <Route path="/compras" element={
-                                <PrivateRoute requiredRole="admin">
-                                    <ResponsiveLayout>
-                                        <InventoryPurchasesPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />

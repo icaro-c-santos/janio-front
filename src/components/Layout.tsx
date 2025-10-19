@@ -121,23 +121,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 💰 Vendas
               </Link>
               <Link
-                to="/compras"
-                style={{
-                  display: "block",
-                  padding: "15px 20px",
-                  color: "white",
-                  textDecoration: "none",
-                  backgroundColor: isActive("/compras")
-                    ? "#4CAF50"
-                    : "transparent",
-                  borderLeft: isActive("/compras")
-                    ? "4px solid #4CAF50"
-                    : "4px solid transparent",
-                }}
-              >
-                🛒 Compras
-              </Link>
-              <Link
                 to="/financeiro"
                 style={{
                   display: "block",
@@ -239,7 +222,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
             {location.pathname === "/" && "Dashboard"}
             {location.pathname === "/clientes" && "Clientes"}
             {location.pathname === "/vendas" && "Vendas"}
-            {location.pathname === "/compras" && "Compras"}
             {location.pathname === "/financeiro" && "Financeiro"}
             {location.pathname === "/fornecedores" && "Fornecedores"}
           </h1>

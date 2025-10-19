@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Paper, Stack, TextField, MenuItem, Button, Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Divider, Grid, Autocomplete, Link, useMediaQuery } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { purchasesService, PaginatedPurchases, PurchaseListItem, CreatePurchaseRequest, PurchaseDetails } from '../../services/purchasesService';
-import { suppliersService, Supplier } from '../../services/suppliersService';
-import ModalSucess from './components/ModalSucess';
-import MobilePurchaseCard from './components/MobilePurchaseCard';
+import { purchasesService, PaginatedPurchases, PurchaseListItem, CreatePurchaseRequest, PurchaseDetails } from '../../../services/purchasesService';
+import { suppliersService, Supplier } from '../../../services/suppliersService';
+import ModalSucess from './ModalSucess';
+import MobilePurchaseCard from './MobilePurchaseCard';
 
-const InventoryPurchasesPage: React.FC = () => {
+const InventoryPurchasesSection: React.FC = () => {
   const [data, setData] = useState<PaginatedPurchases | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -494,4 +494,4 @@ const InventoryPurchasesPage: React.FC = () => {
   );
 };
 
-export default InventoryPurchasesPage;
+export default InventoryPurchasesSection;
