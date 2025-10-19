@@ -26,6 +26,9 @@ export interface InventoryItem {
   itemType: string;
   quantity: number;
   updatedAt?: string;
+  alertThreshold?: number;
+  criticalQuantity?: number;
+  status?: 'ok' | 'atencao' | 'critico';
 }
 
 export interface CreateInputMovementRequest {
@@ -33,6 +36,13 @@ export interface CreateInputMovementRequest {
   quantity: number;
   movementDate?: string;
   purchaseId?: string;
+}
+
+export interface CreateOutputMovementRequest {
+  itemType: string;
+  quantity: number;
+  movementDate: string;
+  reason?: string;
 }
 
 class InventoryService {
@@ -97,6 +107,15 @@ class InventoryService {
 
   async createInputMovement(payload: CreateInputMovementRequest): Promise<any> {
     return this.makeRequest<any>(`/inventory/movements-input`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async createOutputMovement(
+    payload: CreateOutputMovementRequest
+  ): Promise<any> {
+    return this.makeRequest<any>(`/inventory/movements-output`, {
       method: "POST",
       body: JSON.stringify(payload),
     });

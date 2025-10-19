@@ -4,6 +4,7 @@ import FiltersBar, { InventoryFilters } from './components/FiltersBar';
 import MovementsTable from './components/MovementsTable';
 import MovementDetailsDialog from './components/MovementDetailsDialog';
 import CreateInputDialog from './components/CreateInputDialog';
+import CreateOutputDialog from './components/CreateOutputDialog';
 import StockTable from './components/StockTable';
 import MobileMovementCard from './components/MobileMovementCard';
 import { inventoryService, PaginatedUnifiedResponse, UnifiedMovement, InventoryItem } from '../../services/inventoryService';
@@ -23,6 +24,8 @@ const InventoryPage: React.FC = () => {
   const [detail, setDetail] = useState<UnifiedMovement | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+  const [createOutputOpen, setCreateOutputOpen] = useState(false);
+  const [createOutputLoading, setCreateOutputLoading] = useState(false);
 
   const [filters, setFilters] = useState<InventoryFilters>({}); // draft filters (UI)
   const [appliedFilters, setAppliedFilters] = useState<InventoryFilters>({}); // applied filters (query)
@@ -43,6 +46,18 @@ const InventoryPage: React.FC = () => {
       setError(e?.message || 'Erro ao carregar movimentos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateOutput = async (payload: { itemType: string; quantity: number; movementDate: string; reason?: string }) => {
+    setCreateOutputLoading(true);
+    try {
+      await inventoryService.createOutputMovement(payload);
+      setCreateOutputOpen(false);
+      setPage(0);
+      await loadMovements();
+    } finally {
+      setCreateOutputLoading(false);
     }
   };
 
@@ -80,7 +95,7 @@ const InventoryPage: React.FC = () => {
     } catch {}
   };
 
-  const handleCreate = async (payload: { itemType: string; quantity: number; unitPrice: number; total: number; movementDate?: string; supplierId?: string }) => {
+  const handleCreate = async (payload: { itemType: string; quantity: number; movementDate: string; purchaseId?: string }) => {
     setCreateLoading(true);
     try {
       await inventoryService.createInputMovement(payload);
@@ -97,7 +112,10 @@ const InventoryPage: React.FC = () => {
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h5">Estoque</Typography>
         {tab === 0 && (
-          <Button variant="contained" onClick={() => setCreateOpen(true)}>Criar entrada</Button>
+          <Box display="flex" gap={1}>
+            <Button variant="contained" onClick={() => setCreateOpen(true)}>Criar entrada</Button>
+            <Button variant="outlined" onClick={() => setCreateOutputOpen(true)}>Dar baixa</Button>
+          </Box>
         )}
       </Stack>
 
@@ -150,6 +168,12 @@ const InventoryPage: React.FC = () => {
             open={createOpen}
             onClose={() => setCreateOpen(false)}
             onSubmit={handleCreate}
+          />
+
+          <CreateOutputDialog
+            open={createOutputOpen}
+            onClose={() => setCreateOutputOpen(false)}
+            onSubmit={handleCreateOutput}
           />
         </>
       )}
