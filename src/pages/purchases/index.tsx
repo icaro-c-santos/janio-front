@@ -4,6 +4,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { purchasesService, PaginatedPurchases, PurchaseListItem, CreatePurchaseRequest, PurchaseDetails } from '../../services/purchasesService';
 import { suppliersService, Supplier } from '../../services/suppliersService';
 import ModalSucess from './components/ModalSucess';
+import MobilePurchaseCard from './components/MobilePurchaseCard';
 
 const InventoryPurchasesPage: React.FC = () => {
   const [data, setData] = useState<PaginatedPurchases | null>(null);
@@ -94,7 +95,7 @@ const InventoryPurchasesPage: React.FC = () => {
     setPage(0);
   };
 
-  const isMobile = useMediaQuery('(max-width:600px)');
+  const isMobile = useMediaQuery('(max-width:800px)');
   const visibleColSpan = isMobile ? 4 : 6;
 
   return (
@@ -182,71 +183,98 @@ const InventoryPurchasesPage: React.FC = () => {
         </Stack>
       </Paper>
 
-      <Paper>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Data</TableCell>
-                <TableCell>Tipo de Item</TableCell>
-                <TableCell>Fornecedor</TableCell>
-                <TableCell align="right">Qtd</TableCell>
-                <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>PU</TableCell>
-                <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Total</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading && (
-                <TableRow><TableCell colSpan={visibleColSpan}>Carregando...</TableCell></TableRow>
-              )}
-              {error && !loading && (
-                <TableRow><TableCell colSpan={visibleColSpan} style={{ color: 'red' }}>{error}</TableCell></TableRow>
-              )}
-              {!loading && !error && (data?.items?.length ?? 0) === 0 && (
-                <TableRow><TableCell colSpan={visibleColSpan}>Nenhuma compra encontrada</TableCell></TableRow>
-              )}
-              {!loading && !error && data?.items?.map((row: PurchaseListItem) => (
-                <React.Fragment key={row.id}>
-                  <TableRow
-                    hover
-                    onClick={async () => {
-                      try {
-                        const details = await purchasesService.getById(row.id);
-                        setSuccessDetails(details);
-                        setSuccessOpen(true);
-                      } catch (e: any) {
-                        setErrorMsg(e?.message || 'Erro ao carregar detalhes');
-                      }
-                    }}
-                    sx={{ cursor: 'pointer' }}
-                  >
-                    <TableCell>{new Date(row.purchaseDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{row.itemType}</TableCell>
-                    <TableCell>
-                      {row.supplierName || '-'}
-                      {row.supplierEmail ? ` (${row.supplierEmail})` : ''}
-                    </TableCell>
-                    <TableCell align="right">{row.quantity}</TableCell>
-                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{Number(row.unitPrice ?? 0).toFixed(2)}</TableCell>
-                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{Number(row.totalValue ?? 0).toFixed(2)}</TableCell>
-
-                  </TableRow>
-
-                </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          component="div"
-          count={data?.total ?? 0}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25, 50]}
-        />
-      </Paper>
+      {isMobile ? (
+        <Box>
+          {loading && (
+            <Typography sx={{ p: 2 }}>Carregando...</Typography>
+          )}
+          {error && !loading && (
+            <Typography sx={{ p: 2 }} color="error">{error}</Typography>
+          )}
+          {!loading && !error && (data?.items?.length ?? 0) === 0 && (
+            <Typography sx={{ p: 2 }} color="text.secondary">Nenhuma compra encontrada</Typography>
+          )}
+          {!loading && !error && data?.items?.map((row: PurchaseListItem) => (
+            <MobilePurchaseCard
+              key={row.id}
+              purchase={row}
+              onClick={async () => {
+                try {
+                  const details = await purchasesService.getById(row.id);
+                  setSuccessDetails(details);
+                  setSuccessOpen(true);
+                } catch (e: any) {
+                  setErrorMsg(e?.message || 'Erro ao carregar detalhes');
+                }
+              }}
+            />
+          ))}
+        </Box>
+      ) : (
+        <Paper>
+          <TableContainer sx={{ overflowX: 'auto' }}>
+            <Table size="small" sx={{ minWidth: 720 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>Data</TableCell>
+                  <TableCell>Tipo de Item</TableCell>
+                  <TableCell>Fornecedor</TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>Qtd</TableCell>
+                  <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' }, whiteSpace: 'nowrap' }}>PU</TableCell>
+                  <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' }, whiteSpace: 'nowrap' }}>Total</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading && (
+                  <TableRow><TableCell colSpan={visibleColSpan}>Carregando...</TableCell></TableRow>
+                )}
+                {error && !loading && (
+                  <TableRow><TableCell colSpan={visibleColSpan} style={{ color: 'red' }}>{error}</TableCell></TableRow>
+                )}
+                {!loading && !error && (data?.items?.length ?? 0) === 0 && (
+                  <TableRow><TableCell colSpan={visibleColSpan}>Nenhuma compra encontrada</TableCell></TableRow>
+                )}
+                {!loading && !error && data?.items?.map((row: PurchaseListItem) => (
+                  <React.Fragment key={row.id}>
+                    <TableRow
+                      hover
+                      onClick={async () => {
+                        try {
+                          const details = await purchasesService.getById(row.id);
+                          setSuccessDetails(details);
+                          setSuccessOpen(true);
+                        } catch (e: any) {
+                          setErrorMsg(e?.message || 'Erro ao carregar detalhes');
+                        }
+                      }}
+                      sx={{ cursor: 'pointer' }}
+                    >
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.purchaseDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{row.itemType}</TableCell>
+                      <TableCell>
+                        {row.supplierName || '-'}
+                        {row.supplierEmail ? ` (${row.supplierEmail})` : ''}
+                      </TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>{row.quantity}</TableCell>
+                      <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' }, whiteSpace: 'nowrap' }}>{Number(row.unitPrice ?? 0).toFixed(2)}</TableCell>
+                      <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' }, whiteSpace: 'nowrap' }}>{Number(row.totalValue ?? 0).toFixed(2)}</TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={data?.total ?? 0}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          />
+        </Paper>
+      )}
 
       {/* Create Purchase Dialog */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
