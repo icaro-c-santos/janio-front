@@ -138,6 +138,23 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 🛒 Compras
               </Link>
               <Link
+                to="/financeiro"
+                style={{
+                  display: "block",
+                  padding: "15px 20px",
+                  color: "white",
+                  textDecoration: "none",
+                  backgroundColor: isActive("/financeiro")
+                    ? "#4CAF50"
+                    : "transparent",
+                  borderLeft: isActive("/financeiro")
+                    ? "4px solid #4CAF50"
+                    : "4px solid transparent",
+                }}
+              >
+                💼 Financeiro
+              </Link>
+              <Link
                 to="/fornecedores"
                 style={{
                   display: "block",
@@ -223,6 +240,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             {location.pathname === "/clientes" && "Clientes"}
             {location.pathname === "/vendas" && "Vendas"}
             {location.pathname === "/compras" && "Compras"}
+            {location.pathname === "/financeiro" && "Financeiro"}
             {location.pathname === "/fornecedores" && "Fornecedores"}
           </h1>
         </header>

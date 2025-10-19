@@ -15,6 +15,7 @@ import ReportsPage from './pages/reports';
 import SuppliersPage from './pages/suppliers';
 import InventoryPurchasesPage from './pages/purchases';
 import SalesPage from './pages/Sales';
+import FinancialPage from './pages/financial';
 
 const theme = createTheme({
     palette: {
@@ -68,6 +69,13 @@ function App() {
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
                                         <InventoryPage />
+                                    </ResponsiveLayout>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/financeiro" element={
+                                <PrivateRoute requiredRole="admin">
+                                    <ResponsiveLayout>
+                                        <FinancialPage />
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />

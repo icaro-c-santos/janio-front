@@ -21,8 +21,10 @@ import {
     ShoppingCart as ShoppingCartIcon,
     Assessment as AssessmentIcon,
     Close as CloseIcon,
+    Money as MoneyIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import FinancialPage from '../pages/financial';
 
 interface MobileLayoutProps {
     children: React.ReactNode;
@@ -40,6 +42,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
         { label: 'Vendas', path: '/vendas', icon: <ShoppingCartIcon /> },
         { label: 'Compras', path: '/compras', icon: <ShoppingCartIcon /> },
         { label: 'Fornecedores', path: '/fornecedores', icon: <PeopleIcon /> },
+        { label: 'Financeiro', path: '/financeiro', icon: <MoneyIcon /> },
         { label: 'Relatórios', path: '/reports', icon: <AssessmentIcon /> },
     ];
 
