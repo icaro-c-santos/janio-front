@@ -47,15 +47,15 @@ const SalesList: React.FC<SalesListProps> = ({
 
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-            <TableContainer>
-                <Table>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 650 }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell>Data</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>Data</TableCell>
                             <TableCell>Cliente</TableCell>
-                            <TableCell>Quantidade</TableCell>
-                            <TableCell>Preço Unit.</TableCell>
-                            <TableCell>Total</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>Quantidade</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>Preço Unit.</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>Total</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -86,30 +86,23 @@ const SalesList: React.FC<SalesListProps> = ({
                                         }
                                     }}
                                 >
-                                    <TableCell>
-                                        <Typography variant="body2">
-                                            {formatDate(sale.saleDate)}
-                                        </Typography>
-
+                                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                        <Typography variant="body2">{formatDate(sale.saleDate)}</Typography>
                                     </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Typography variant="body2">
+                                    <TableCell sx={{ minWidth: 200 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                                            <Typography variant="body2" noWrap sx={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {getCustomerName(sale)}
                                             </Typography>
                                         </Box>
                                     </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2">
-                                            {sale.quantity}
-                                        </Typography>
+                                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                        <Typography variant="body2">{sale.quantity}</Typography>
                                     </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2">
-                                            {formatCurrency(Number(sale.unitPrice))}
-                                        </Typography>
+                                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                        <Typography variant="body2">{formatCurrency(Number(sale.unitPrice))}</Typography>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
                                         <Typography variant="body2" fontWeight="medium" color="primary">
                                             {formatCurrency(Number(sale.totalPrice))}
                                         </Typography>

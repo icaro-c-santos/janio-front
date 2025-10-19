@@ -64,7 +64,7 @@ function App() {
                                     </ResponsiveLayout>
                                 </PrivateRoute>
                             } />
-                            <Route path="/estoque-movimentacoes" element={
+                            <Route path="/estoque" element={
                                 <PrivateRoute requiredRole="admin">
                                     <ResponsiveLayout>
                                         <InventoryPage />

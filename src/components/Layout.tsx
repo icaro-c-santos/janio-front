@@ -87,6 +87,23 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 👥 Clientes
               </Link>
               <Link
+                to="/estoque"
+                style={{
+                  display: "block",
+                  padding: "15px 20px",
+                  color: "white",
+                  textDecoration: "none",
+                  backgroundColor: isActive("/estoque")
+                    ? "#4CAF50"
+                    : "transparent",
+                  borderLeft: isActive("/estoque")
+                    ? "4px solid #4CAF50"
+                    : "4px solid transparent",
+                }}
+              >
+                📦 Estoque
+              </Link>
+              <Link
                 to="/vendas"
                 style={{
                   display: "block",

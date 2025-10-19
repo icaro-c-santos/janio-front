@@ -12,11 +12,18 @@ interface FiltersBarProps {
   filters: InventoryFilters;
   onChange: (filters: InventoryFilters) => void;
   onClear: () => void;
+  onApply: () => void;
 }
 
-const FiltersBar: React.FC<FiltersBarProps> = ({ filters, onChange, onClear }) => {
+const FiltersBar: React.FC<FiltersBarProps> = ({ filters, onChange, onClear, onApply }) => {
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+    <Stack
+      direction={{ xs: 'row', sm: 'row' }}
+      spacing={2}
+      useFlexGap
+      flexWrap="wrap"
+      alignItems="center"
+    >
       <TextField
         select
         size="small"
@@ -54,6 +61,7 @@ const FiltersBar: React.FC<FiltersBarProps> = ({ filters, onChange, onClear }) =
         InputLabelProps={{ shrink: true }}
         value={filters.dateFrom ?? ''}
         onChange={(e) => onChange({ ...filters, dateFrom: e.target.value || undefined })}
+        sx={{ minWidth: 160 }}
       />
 
       <TextField
@@ -63,9 +71,11 @@ const FiltersBar: React.FC<FiltersBarProps> = ({ filters, onChange, onClear }) =
         InputLabelProps={{ shrink: true }}
         value={filters.dateTo ?? ''}
         onChange={(e) => onChange({ ...filters, dateTo: e.target.value || undefined })}
+        sx={{ minWidth: 160 }}
       />
 
-      <Button variant="outlined" onClick={onClear}>Limpar</Button>
+      <Button variant="contained" size="small" onClick={onApply} sx={{ minWidth: 110 }}>Aplicar</Button>
+      <Button variant="outlined" size="small" onClick={onClear} sx={{ minWidth: 110 }}>Limpar</Button>
     </Stack>
   );
 };

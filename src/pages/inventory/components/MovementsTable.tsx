@@ -18,16 +18,15 @@ const directionLabel = (d: UnifiedMovement['direction']) => d === 'entrada' ? 'E
 const MovementsTable: React.FC<MovementsTableProps> = ({ data, loading, error, page, rowsPerPage, onPageChange, onRowsPerPageChange, onDetails }) => {
   return (
     <Paper>
-      <TableContainer>
-        <Table size="small">
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table size="small" sx={{ minWidth: 800 }}>
           <TableHead>
             <TableRow>
-              <TableCell>Tipo</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Tipo</TableCell>
               <TableCell>Item</TableCell>
-              <TableCell align="right">Quantidade</TableCell>
-              <TableCell>Data</TableCell>
+              <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>Quantidade</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Data</TableCell>
               <TableCell>Detalhes</TableCell>
-              <TableCell align="right">Ações</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -47,13 +46,18 @@ const MovementsTable: React.FC<MovementsTableProps> = ({ data, loading, error, p
               </TableRow>
             )}
             {!loading && !error && (data?.items || []).map((row) => (
-              <TableRow key={row.id} hover>
-                <TableCell>
+              <TableRow
+                key={row.id}
+                hover
+                onClick={() => onDetails(row.id)}
+                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
+              >
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <Chip label={directionLabel(row.direction)} color={row.direction === 'entrada' ? 'success' : 'warning'} size="small" />
                 </TableCell>
                 <TableCell>{row.itemType}</TableCell>
-                <TableCell align="right">{row.quantity}</TableCell>
-                <TableCell>{new Date(row.movementDate).toLocaleString()}</TableCell>
+                <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>{row.quantity}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.movementDate).toLocaleString()}</TableCell>
                 <TableCell>
                   {row.direction === 'entrada' ? (
                     <Box>
@@ -68,9 +72,6 @@ const MovementsTable: React.FC<MovementsTableProps> = ({ data, loading, error, p
                       {row.saleId && <Typography variant="body2">Venda: {row.saleId}</Typography>}
                     </Box>
                   )}
-                </TableCell>
-                <TableCell align="right">
-                  <Button size="small" variant="outlined" onClick={() => onDetails(row.id)}>Detalhes</Button>
                 </TableCell>
               </TableRow>
             ))}
