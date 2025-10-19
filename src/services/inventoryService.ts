@@ -31,10 +31,8 @@ export interface InventoryItem {
 export interface CreateInputMovementRequest {
   itemType: string;
   quantity: number;
-  unitPrice: number;
-  total: number;
   movementDate?: string;
-  supplierId?: string;
+  purchaseId?: string;
 }
 
 class InventoryService {
