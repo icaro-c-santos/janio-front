@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Paper, Stack, TextField, MenuItem, Button, useMediaQuery, Table, TableHead, TableRow, TableCell, TableBody, Typography, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
 import { accountsPayableService, AccountPayType, AccountPayableListItem, AccountPayableDetail, AccountPayableStatus } from '../../../services/accountsPayableService';
+import { useToast } from '../../../contexts/ToastContext';
+import CreateAccountPayableDialog from './CreateAccountPayableDialog';
 
 const statusOptions: { value: AccountPayableStatus; label: string }[] = [
   { value: 'PENDING', label: 'Pendente' },
@@ -19,6 +21,8 @@ const AccountsPayableSection: React.FC = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detail, setDetail] = useState<AccountPayableDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const { success: showSuccess, error: showError } = useToast();
 
   const loadTypes = async () => {
     try {
@@ -71,6 +75,10 @@ const AccountsPayableSection: React.FC = () => {
   return (
     <Box>
       <Paper sx={{ p: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">Contas a pagar</Typography>
+          <Button variant="contained" onClick={() => setCreateOpen(true)}>Nova conta a pagar</Button>
+        </Box>
         <Stack spacing={2} direction={{ xs: 'column', md: 'row' }}>
           <TextField label="Beneficiário" value={filters.beneficiary || ''} onChange={(e) => setFilters((f) => ({ ...f, beneficiary: e.target.value }))} fullWidth />
           <TextField select label="Status" value={filters.status || ''} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value as any }))} fullWidth>
@@ -207,6 +215,17 @@ const AccountsPayableSection: React.FC = () => {
           <Button onClick={() => setDetailOpen(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
+
+      <CreateAccountPayableDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        types={types}
+        onCreated={() => {
+          setCreateOpen(false);
+          showSuccess('Conta a pagar criada com sucesso');
+          applyFilters();
+        }}
+      />
     </Box>
   );
 };
