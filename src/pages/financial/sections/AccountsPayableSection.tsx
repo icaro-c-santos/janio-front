@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Paper, Stack, TextField, MenuItem, Button, useMediaQuery, Table, TableHead, TableRow, TableCell, TableBody, Typography, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
+import { Box, Paper, Stack, TextField, MenuItem, Button, useMediaQuery, Table, TableHead, TableRow, TableCell, TableBody, Typography, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Chip } from '@mui/material';
 import { accountsPayableService, AccountPayType, AccountPayableListItem, AccountPayableDetail, AccountPayableStatus } from '../../../services/accountsPayableService';
 import { useToast } from '../../../contexts/ToastContext';
 import CreateAccountPayableDialog from './CreateAccountPayableDialog';
+import SettleAccountPayableDialog from './SettleAccountPayableDialog';
 
 const statusOptions: { value: AccountPayableStatus; label: string }[] = [
-  { value: 'PENDING', label: 'Pendente' },
-  { value: 'PAID', label: 'Paga' },
-  { value: 'OVERDUE', label: 'Vencida' },
+  { value: 'PENDING', label: 'PENDENTE' },
+  { value: 'PAID', label: 'PAGO' },
+  { value: 'OVERDUE', label: 'EM ATRASO' },
 ];
 
 const AccountsPayableSection: React.FC = () => {
@@ -22,6 +23,8 @@ const AccountsPayableSection: React.FC = () => {
   const [detail, setDetail] = useState<AccountPayableDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [settleOpen, setSettleOpen] = useState(false);
+  const [settleId, setSettleId] = useState<string | null>(null);
   const { success: showSuccess, error: showError } = useToast();
 
   const loadTypes = async () => {
@@ -29,6 +32,18 @@ const AccountsPayableSection: React.FC = () => {
       const res = await accountsPayableService.listTypes();
       setTypes(res);
     } catch { }
+  };
+
+  const statusMeta = (status: AccountPayableStatus) => {
+    switch (status) {
+      case 'PAID':
+        return { label: 'PAGO', color: 'success' as const };
+      case 'OVERDUE':
+        return { label: 'EM ATRASO', color: 'error' as const };
+      case 'PENDING':
+      default:
+        return { label: 'PENDENTE', color: 'warning' as const };
+    }
   };
 
   const applyFilters = async () => {
@@ -102,31 +117,46 @@ const AccountsPayableSection: React.FC = () => {
 
       {!isMobile && (
         <Paper>
-          <Table size="small">
+          <Table size="small" sx={{ tableLayout: 'fixed' }}>
             <TableHead>
               <TableRow>
-                <TableCell>Beneficiário</TableCell>
-                <TableCell align="right">Total</TableCell>
-                <TableCell>Vencimento</TableCell>
-                <TableCell>Status</TableCell>
+                <TableCell sx={{ width: '40%' }}>Beneficiário</TableCell>
+                <TableCell align="right" sx={{ width: 120 }}>Total</TableCell>
+                <TableCell sx={{ width: 130 }}>Vencimento</TableCell>
+                <TableCell align="center" sx={{ width: 140 }}>Status</TableCell>
+                <TableCell align="center" sx={{ width: 160 }}>Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading && (
-                <TableRow><TableCell colSpan={4} align="center"><Box py={3}><CircularProgress size={24} /></Box></TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} align="center"><Box py={3}><CircularProgress size={24} /></Box></TableCell></TableRow>
               )}
               {error && !loading && (
-                <TableRow><TableCell colSpan={4} align="center"><Typography color="error">{error}</Typography></TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} align="center"><Typography color="error">{error}</Typography></TableCell></TableRow>
               )}
               {!loading && !error && items.length === 0 && (
-                <TableRow><TableCell colSpan={4} align="center"><Typography color="text.secondary">Nenhuma conta encontrada</Typography></TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} align="center"><Typography color="text.secondary">Nenhuma conta encontrada</Typography></TableCell></TableRow>
               )}
               {!loading && !error && items.map(it => (
-                <TableRow key={it.id} hover onClick={() => openDetail(it.id)} sx={{ cursor: 'pointer' }}>
-                  <TableCell>{it.beneficiary || '-'}</TableCell>
-                  <TableCell align="right">{Number(it.totalValue).toFixed(2)}</TableCell>
-                  <TableCell>{new Date(it.dueDate).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>{it.status}</TableCell>
+                <TableRow key={it.id} hover>
+                  <TableCell onClick={() => openDetail(it.id)} sx={{ cursor: 'pointer' }}>{it.beneficiary || '-'}</TableCell>
+                  <TableCell align="right" onClick={() => openDetail(it.id)} sx={{ cursor: 'pointer' }}>{Number(it.totalValue).toFixed(2)}</TableCell>
+                  <TableCell onClick={() => openDetail(it.id)} sx={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>{new Date(it.dueDate).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell align="center" onClick={() => openDetail(it.id)} sx={{ cursor: 'pointer' }}>
+                    <Chip
+                      size="small"
+                      label={statusMeta(it.status).label}
+                      color={statusMeta(it.status).color}
+                      sx={{ minWidth: 110, '& .MuiChip-label': { width: '100%', textAlign: 'center', px: 0 } }}
+                    />
+                  </TableCell>
+                  <TableCell align="center" >
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                      {it.status !== 'PAID' && (
+                        <Button size="small" variant="outlined" onClick={() => { setSettleId(it.id); setSettleOpen(true); }}>Dar baixa</Button>
+                      )}
+                    </Box>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -160,7 +190,19 @@ const AccountsPayableSection: React.FC = () => {
                 <Typography variant="subtitle2">{it.beneficiary || '-'}</Typography>
                 <Typography>Total: <strong>{Number(it.totalValue).toFixed(2)}</strong></Typography>
                 <Typography>Venc.: {new Date(it.dueDate).toLocaleDateString('pt-BR')}</Typography>
-                <Typography>Status: {it.status}</Typography>
+                <Box>
+                  <Chip
+                    size="small"
+                    label={statusMeta(it.status).label}
+                    color={statusMeta(it.status).color}
+                    sx={{ minWidth: 110, '& .MuiChip-label': { width: '100%', textAlign: 'center', px: 0 } }}
+                  />
+                </Box>
+                {it.status !== 'PAID' && (
+                  <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center' }}>
+                    <Button size="small" variant="outlined" onClick={(e) => { e.stopPropagation(); setSettleId(it.id); setSettleOpen(true); }}>Dar baixa</Button>
+                  </Box>
+                )}
               </Stack>
             </Paper>
           ))}
@@ -201,7 +243,7 @@ const AccountsPayableSection: React.FC = () => {
               {(detail.receiptDownloadUrl || detail.paymentReceiptDownloadUrl) && (
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="subtitle2">Comprovantes</Typography>
-                  {detail.receiptDownloadUrl && <a href={detail.receiptDownloadUrl} target="_blank" rel="noreferrer">Download do PDF enviado</a>}
+                  {detail.receiptDownloadUrl && <a href={detail.receiptDownloadUrl} target="_blank" rel="noreferrer">Download da conta</a>}
                   {detail.paymentReceiptDownloadUrl && <>
                     <br />
                     <a href={detail.paymentReceiptDownloadUrl} target="_blank" rel="noreferrer">Download do recibo de pagamento</a>
@@ -223,6 +265,18 @@ const AccountsPayableSection: React.FC = () => {
         onCreated={() => {
           setCreateOpen(false);
           showSuccess('Conta a pagar criada com sucesso');
+          applyFilters();
+        }}
+      />
+
+      <SettleAccountPayableDialog
+        open={settleOpen}
+        onClose={() => { setSettleOpen(false); setSettleId(null); }}
+        accountId={settleId}
+        onSettled={() => {
+          setSettleOpen(false);
+          setSettleId(null);
+          showSuccess('Baixa realizada com sucesso');
           applyFilters();
         }}
       />

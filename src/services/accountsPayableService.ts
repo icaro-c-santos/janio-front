@@ -122,6 +122,16 @@ class AccountsPayableService {
       body: form,
     });
   }
+
+  async settle(id: string, payload: { paidAt?: string }, receiptFile?: File | null): Promise<AccountPayableDetail> {
+    const form = new FormData();
+    if (payload.paidAt) form.append('paidAt', payload.paidAt);
+    if (receiptFile) form.append('receipt', receiptFile);
+    return this.makeRequest<AccountPayableDetail>(`/accounts-payable/${id}/settle`, {
+      method: 'POST',
+      body: form,
+    });
+  }
 }
 
 export const accountsPayableService = new AccountsPayableService();
