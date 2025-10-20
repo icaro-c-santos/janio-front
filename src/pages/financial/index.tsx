@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Paper, Tabs, Tab, Typography } from '@mui/material';
 import InventoryPurchasesPage from './sections/InventoryPurchasesSection';
 import AccountsPayableSection from './sections/AccountsPayableSection';
+import AccountsReceivableSection from './sections/AccountsReceivableSection';
 
 const FinancialPage: React.FC = () => {
   const [tab, setTab] = useState(0);
@@ -21,8 +22,8 @@ const FinancialPage: React.FC = () => {
       )}
 
       {tab === 1 && (
-        <Box>
-          <Typography color="text.secondary">Em breve: listagem de contas a receber</Typography>
+        <Box sx={{ p: { xs: 0, md: 0 } }}>
+          <AccountsReceivableSection />
         </Box>
       )}
 
@@ -36,3 +37,4 @@ const FinancialPage: React.FC = () => {
 };
 
 export default FinancialPage;
+
