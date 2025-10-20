@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Paper, Stack, TextField, MenuItem, Button, Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Chip, useMediaQuery } from '@mui/material';
 import { accountsReceivableService, AccountReceivableDetail, AccountReceivableListItem, AccountReceivableStatus, PaginatedReceivables } from '../../../services/accountsReceivableService';
+import CreateAccountReceivableDialog from './CreateAccountReceivableDialog';
+import SettleAccountReceivableDialog from './SettleAccountReceivableDialog';
 
 const statusOptions: { value: AccountReceivableStatus | ''; label: string }[] = [
   { value: '', label: 'Todos' },
@@ -36,6 +38,8 @@ const AccountsReceivableSection: React.FC = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detail, setDetail] = useState<AccountReceivableDetail | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [settleOpen, setSettleOpen] = useState(false);
 
   const queryParams = useMemo(() => ({
     customerQuery: filters.customerQuery,
@@ -83,6 +87,10 @@ const AccountsReceivableSection: React.FC = () => {
   return (
     <Box>
       <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between" spacing={1} mb={2}>
+          <Typography variant="h6">Contas a receber</Typography>
+          <Button variant="contained" onClick={() => setCreateOpen(true)} sx={{ width: { xs: '100%', sm: 'auto' } }}>Nova conta a receber</Button>
+        </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }} flexWrap={{ sm: 'wrap' }} useFlexGap>
           <TextField
             size="small"
@@ -236,52 +244,88 @@ const AccountsReceivableSection: React.FC = () => {
               <Typography>Vencimento: <strong>{new Date(detail.dueDate).toLocaleDateString('pt-BR')}</strong></Typography>
               <Typography>Mês de competência: <strong>{detail.competenceDate ? new Date(detail.competenceDate).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit' }) : '-'}</strong></Typography>
               <Typography>Status: <strong>{statusMeta(detail.status).label}</strong></Typography>
+              {detail.receivedAt && (
+                <Typography>Recebido em: <strong>{new Date(detail.receivedAt).toLocaleDateString('pt-BR')}</strong></Typography>
+              )}
 
-              {!!detail.sales?.length && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="subtitle2">Vendas</Typography>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Data</TableCell>
-                        <TableCell align="right">Quantidade</TableCell>
-                        <TableCell align="right">Total</TableCell>
+            {!!detail.sales?.length && (
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="subtitle2">Vendas</Typography>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Data</TableCell>
+                      <TableCell align="right">Quantidade</TableCell>
+                      <TableCell align="right">Valor unitário</TableCell>
+                      <TableCell align="right">Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {detail.sales.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell>{new Date(s.saleDate).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell align="right">{s.quantity}</TableCell>
+                        <TableCell align="right">{Number(s.unitPrice).toFixed(2)}</TableCell>
+                        <TableCell align="right">{Number(s.totalValue).toFixed(2)}</TableCell>
                       </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {detail.sales.map((s) => (
-                        <TableRow key={s.id}>
-                          <TableCell>{new Date(s.saleDate).toLocaleDateString('pt-BR')}</TableCell>
-                          <TableCell align="right">{s.quantity}</TableCell>
-                          <TableCell align="right">{Number(s.totalValue).toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Box>
-              )}
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            )}
 
-              {(detail.reportDownloadUrl || (detail.status === 'RECEIVED' && detail.paymentReceiptDownloadUrl)) && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="subtitle2">Downloads</Typography>
-                  {detail.reportDownloadUrl && (
-                    <a href={detail.reportDownloadUrl} target="_blank" rel="noreferrer">Baixar relatório da venda</a>
-                  )}
-                  {detail.status === 'RECEIVED' && detail.paymentReceiptDownloadUrl && (
-                    <>
-                      <br />
-                      <a href={detail.paymentReceiptDownloadUrl} target="_blank" rel="noreferrer">Baixar comprovante de pagamento</a>
-                    </>
-                  )}
-                </Box>
-              )}
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDetailOpen(false)}>Fechar</Button>
-        </DialogActions>
-      </Dialog>
+            {(detail.reportDownloadUrl || (detail.status === 'RECEIVED' && detail.paymentReceiptDownloadUrl)) && (
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="subtitle2">Downloads</Typography>
+                {detail.reportDownloadUrl && (
+                  <a href={detail.reportDownloadUrl} target="_blank" rel="noreferrer">Baixar relatório da venda</a>
+                )}
+                {detail.status === 'RECEIVED' && detail.paymentReceiptDownloadUrl && (
+                  <>
+                    <br />
+                    <a href={detail.paymentReceiptDownloadUrl} target="_blank" rel="noreferrer">Baixar comprovante de pagamento</a>
+                  </>
+                )}
+              </Box>
+            )}
+          </Stack>
+        )}
+      </DialogContent>
+      <DialogActions>
+        {detail && detail.status !== 'RECEIVED' && (
+          <Button variant="contained" color="success" onClick={() => setSettleOpen(true)} sx={{ mr: 1 }}>
+            Dar baixa
+          </Button>
+        )}
+        <Button onClick={() => setDetailOpen(false)}>Fechar</Button>
+      </DialogActions>
+    </Dialog>
+    
+
+      <CreateAccountReceivableDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={async () => {
+          setCreateOpen(false);
+          setPage(0);
+          await load();
+        }}
+      />
+
+      <SettleAccountReceivableDialog
+        open={settleOpen}
+        receivableId={detail?.id || null}
+        onClose={() => setSettleOpen(false)}
+        onSettled={async () => {
+          setSettleOpen(false);
+          // refresh current detail and list
+          if (detail?.id) {
+            const fresh = await accountsReceivableService.getById(detail.id);
+            setDetail(fresh);
+          }
+          await load();
+        }}
+      />
     </Box>
   );
 };

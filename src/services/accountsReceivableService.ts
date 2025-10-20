@@ -31,11 +31,13 @@ export interface AccountReceivableDetail
   sales?: Array<{
     id: string;
     quantity: number;
+    unitPrice: number;
     totalValue: number;
     saleDate: string;
   }>;
   reportDownloadUrl?: string | null;
   paymentReceiptDownloadUrl?: string | null;
+  receivedAt?: string | null;
 }
 
 export interface PaginatedReceivables {
@@ -87,6 +89,47 @@ class AccountsReceivableService {
   async getById(id: string): Promise<AccountReceivableDetail> {
     return this.makeRequest<AccountReceivableDetail>(
       `/accounts-receivable/${id}`
+    );
+  }
+
+  async create(
+    payload: {
+      customerId: string;
+      amount: number;
+      dueDate: string; // YYYY-MM-DD
+      competenceMonth?: string; // YYYY-MM
+      description?: string;
+      reportFileKey?: string;
+    },
+    reportFile?: File | null
+  ): Promise<AccountReceivableDetail> {
+    const form = new FormData();
+    form.append("customerId", payload.customerId);
+    form.append("amount", String(payload.amount));
+    form.append("dueDate", payload.dueDate);
+    if (payload.competenceMonth)
+      form.append("competenceMonth", payload.competenceMonth);
+    if (payload.description) form.append("description", payload.description);
+    if (payload.reportFileKey)
+      form.append("reportFileKey", payload.reportFileKey);
+    if (reportFile) form.append("report", reportFile);
+    return this.makeRequest<AccountReceivableDetail>(`/accounts-receivable`, {
+      method: "POST",
+      body: form,
+    });
+  }
+
+  async settle(
+    id: string,
+    payload: { paidAt: string },
+    receiptFile?: File | null
+  ): Promise<AccountReceivableDetail> {
+    const form = new FormData();
+    form.append("paidAt", payload.paidAt);
+    if (receiptFile) form.append("receipt", receiptFile);
+    return this.makeRequest<AccountReceivableDetail>(
+      `/accounts-receivable/${id}/settle`,
+      { method: "POST", body: form }
     );
   }
 }
