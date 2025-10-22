@@ -21,6 +21,7 @@ export const API_CONFIG = {
     // Relatórios
     REPORTS: "/reports",
     REPORTS_DOWNLOAD: (id) => `/reports/${id}/download`,
+    REPORTS_TYPES: "/reports/types",
   },
 
   // Configurações de requisição

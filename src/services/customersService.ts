@@ -34,7 +34,7 @@ class CustomersService {
       "Content-Type": "application/json",
     };
     try {
-      const token = localStorage.getItem('janio_erp_token');
+      const token = localStorage.getItem("janio_erp_token");
       if (token) {
         defaultHeaders["Authorization"] = `Bearer ${token}`;
       }
@@ -57,7 +57,10 @@ class CustomersService {
         if (response.status === 400) {
           if (errorData.errors && Array.isArray(errorData.errors)) {
             const validationErrors = errorData.errors
-              .map((err: any) => `${(err as any).path?.join(".")}: ${(err as any).message}`)
+              .map(
+                (err: any) =>
+                  `${(err as any).path?.join(".")}: ${(err as any).message}`
+              )
               .join(", ");
             throw new Error(`Dados inválidos: ${validationErrors}`);
           }
@@ -70,7 +73,8 @@ class CustomersService {
           );
         } else {
           throw new Error(
-            errorData.message || `Erro ${response.status}: ${response.statusText}`
+            errorData.message ||
+              `Erro ${response.status}: ${response.statusText}`
           );
         }
       }

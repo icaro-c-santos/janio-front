@@ -28,6 +28,7 @@ import {
     CardActions,
     Pagination,
     InputAdornment,
+    Autocomplete,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -43,9 +44,14 @@ import {
 import { apiRequest, API_CONFIG, buildApiUrl } from '../../config/api';
 
 const REPORT_TYPE_LABELS: Record<string, string> = {
-    SALES_SUMMARY: 'Resumo de Vendas',
-    SALES_BY_CUSTOMER: 'Vendas por Cliente',
-    INVENTORY_MOVES: 'Movimentações de Estoque',
+    VENDAS_MENSAL_GERAL: 'Vendas Mensal (Geral)',
+    VENDAS_MENSAL_POR_CLIENTE: 'Vendas Mensal por Cliente',
+    VENDAS_ANUAL_GERAL: 'Vendas Anual (Geral)',
+    VENDAS_ANUAL_POR_CLIENTE: 'Vendas Anual por Cliente',
+    ESTOQUE_MENSAL: 'Estoque Mensal',
+    ESTOQUE_ANUAL: 'Estoque Anual',
+    DRE_MENSAL: 'DRE Mensal',
+    DRE_ANUAL: 'DRE Anual',
 };
 const REPORT_STATUS_LABELS: Record<string, string> = {
     PENDING: 'Pendente',
@@ -53,9 +59,9 @@ const REPORT_STATUS_LABELS: Record<string, string> = {
     READY: 'Pronto',
     FAILED: 'Falhou',
 };
-const needsCustomer = (type: string) => type === 'SALES_BY_CUSTOMER';
-const needsProduct = (_type: string) => false;
+const needsCustomer = (type: string) => type?.includes('POR_CLIENTE');
 import { useToast } from '../../hooks/useToast';
+import { customersService } from '../../services/customersService';
 
 interface Report {
     id: string;
@@ -67,6 +73,7 @@ interface Report {
     requestedBy: string | null;
     createdAt: string;
     updatedAt: string;
+    downloadUrl?: string | null;
 }
 
 interface CreateReportModalProps {
@@ -85,67 +92,64 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
         description: '',
         type: '',
         customerId: '',
-        productId: ''
     });
+    const [availableTypes, setAvailableTypes] = useState<string[]>([]);
     type SimpleItem = { id: string; name: string };
     const [customers, setCustomers] = useState<SimpleItem[]>([]);
-    const [products, setProducts] = useState<SimpleItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(false);
+    const [loadingCustomers, setLoadingCustomers] = useState(false);
     const { error: showError, success: showSuccess } = useToast();
 
+
     useEffect(() => {
+        (async () => {
+            try {
+                const types = await apiRequest(API_CONFIG.ENDPOINTS.REPORTS_TYPES);
+                if (Array.isArray(types)) setAvailableTypes(types as string[]);
+            } catch (_) {
+                // fallback: use keys from map
+                setAvailableTypes(Object.keys(REPORT_TYPE_LABELS));
+            }
+        })();
+    }, []);
+
+    // Carrega clientes quando o modal abre
+    useEffect(() => {
+        const loadCustomers = async () => {
+            setLoadingCustomers(true);
+            try {
+                const customersList = await customersService.getAllCustomers();
+                const mapped = (customersList || []).map((c: any) => ({ id: c.id, name: c.name }));
+                setCustomers(mapped);
+            } catch (_err) {
+                setCustomers([]);
+            } finally {
+                setLoadingCustomers(false);
+            }
+        };
+
         if (isOpen) {
-            loadCustomersAndProducts();
+            loadCustomers();
         }
     }, [isOpen]);
 
-    const loadCustomersAndProducts = async () => {
-        setLoadingData(true);
-        try {
-            const [customersResponse, productsResponse] = await Promise.all([
-                apiRequest(API_CONFIG.ENDPOINTS.CUSTOMERS),
-                apiRequest(API_CONFIG.ENDPOINTS.PRODUCTS)
-            ]);
-
-            let customersData = [] as any[];
-            if (customersResponse.success && customersResponse.data) {
-                customersData = customersResponse.data.items || customersResponse.data || [];
-            } else if ((customersResponse as any).items) {
-                customersData = (customersResponse as any).items;
-            } else if (Array.isArray(customersResponse)) {
-                customersData = customersResponse as any[];
+    // Garante carregar clientes ao selecionar um tipo POR_CLIENTE
+    useEffect(() => {
+        const shouldLoad = needsCustomer(formData.type) && customers.length === 0 && !loadingCustomers;
+        if (!shouldLoad) return;
+        (async () => {
+            setLoadingCustomers(true);
+            try {
+                const customersList = await customersService.getAllCustomers();
+                const mapped = (customersList || []).map((c: any) => ({ id: c.id, name: c.name }));
+                setCustomers(mapped);
+            } finally {
+                setLoadingCustomers(false);
             }
+        })();
+    }, [formData.type]);
 
-            const mappedCustomers = customersData.map((customer: any) => ({
-                id: customer.userId || customer.id,
-                name: customer.user?.type === 'INDIVIDUAL'
-                    ? customer.user.individual?.fullName || 'Nome não informado'
-                    : customer.user?.company?.legalName || 'Razão social não informada'
-            }));
-
-            let productsData = [] as any[];
-            if ((productsResponse as any).success && (productsResponse as any).data) {
-                productsData = Array.isArray((productsResponse as any).data) ? (productsResponse as any).data : [(productsResponse as any).data];
-            } else if (Array.isArray(productsResponse)) {
-                productsData = productsResponse as any[];
-            } else if (Array.isArray((productsResponse as any).data)) {
-                productsData = (productsResponse as any).data;
-            }
-
-            const mappedProducts = productsData.map((product: any) => ({
-                id: product.id,
-                name: product.name
-            }));
-
-            setCustomers(mappedCustomers);
-            setProducts(mappedProducts);
-        } catch (error) {
-            showError('Erro ao carregar clientes e produtos');
-        } finally {
-            setLoadingData(false);
-        }
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -160,10 +164,6 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
             return;
         }
 
-        if (needsProduct(formData.type) && !formData.productId) {
-            showError('Produto é obrigatório para este tipo de relatório');
-            return;
-        }
 
         setLoading(true);
         try {
@@ -171,8 +171,11 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
                 name: formData.name,
                 description: formData.description || undefined,
                 type: formData.type,
-                customerId: needsCustomer(formData.type) ? formData.customerId : undefined,
-                productId: needsProduct(formData.type) ? formData.productId : undefined,
+                metadata: {
+                    ...(needsCustomer(formData.type) && formData.customerId
+                        ? { customerId: formData.customerId }
+                        : {}),
+                },
             };
 
             await apiRequest(API_CONFIG.ENDPOINTS.REPORTS, {
@@ -195,7 +198,6 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
             description: '',
             type: '',
             customerId: '',
-            productId: ''
         });
         onClose();
     };
@@ -245,9 +247,9 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
                                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                                     label="Tipo de Relatório"
                                 >
-                                    {Object.entries(REPORT_TYPE_LABELS).map(([key, label]) => (
+                                    {availableTypes.map((key) => (
                                         <MenuItem key={key} value={key}>
-                                            {label}
+                                            {REPORT_TYPE_LABELS[key] ?? key}
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -256,63 +258,31 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
 
                         {needsCustomer(formData.type) && (
                             <Grid item xs={12}>
-                                <FormControl fullWidth required>
-                                    <InputLabel>Cliente</InputLabel>
-                                    <Select
-                                        value={formData.customerId}
-                                        onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-                                        label="Cliente"
-                                        disabled={loadingData}
-                                    >
-                                        {loadingData ? (
-                                            <MenuItem disabled>
-                                                <CircularProgress size={20} sx={{ mr: 1 }} />
-                                                Carregando clientes...
-                                            </MenuItem>
-                                        ) : customers.length === 0 ? (
-                                            <MenuItem disabled>
-                                                Nenhum cliente encontrado
-                                            </MenuItem>
-                                        ) : (
-                                            (customers as any[]).map((customer) => (
-                                                <MenuItem key={(customer as any).id} value={(customer as any).id}>
-                                                    {(customer as any).name}
-                                                </MenuItem>
-                                            ))
-                                        )}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                        )}
-
-                        {needsProduct(formData.type) && (
-                            <Grid item xs={12}>
-                                <FormControl fullWidth required>
-                                    <InputLabel>Produto</InputLabel>
-                                    <Select
-                                        value={formData.productId}
-                                        onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-                                        label="Produto"
-                                        disabled={loadingData}
-                                    >
-                                        {loadingData ? (
-                                            <MenuItem disabled>
-                                                <CircularProgress size={20} sx={{ mr: 1 }} />
-                                                Carregando produtos...
-                                            </MenuItem>
-                                        ) : (products as any[]).length === 0 ? (
-                                            <MenuItem disabled>
-                                                Nenhum produto encontrado
-                                            </MenuItem>
-                                        ) : (
-                                            (products as any[]).map((product) => (
-                                                <MenuItem key={(product as any).id} value={(product as any).id}>
-                                                    {(product as any).name}
-                                                </MenuItem>
-                                            ))
-                                        )}
-                                    </Select>
-                                </FormControl>
+                                <Autocomplete
+                                    options={customers}
+                                    loading={loadingCustomers}
+                                    getOptionLabel={(o) => (o ? o.name : '')}
+                                    value={customers.find((c) => c.id === formData.customerId) || null}
+                                    onChange={(_e, val) => setFormData({ ...formData, customerId: val?.id || '' })}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Cliente"
+                                            placeholder="Selecione"
+                                            required
+                                            fullWidth
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {loadingCustomers ? <CircularProgress color="inherit" size={20} /> : null}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
                             </Grid>
                         )}
                     </Grid>
@@ -337,8 +307,12 @@ const ReportsPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [downloadingReports, setDownloadingReports] = useState<Set<string>>(new Set());
     const [filters, setFilters] = useState({ status: '', type: '', search: '' });
+    const [uiFilters, setUiFilters] = useState({ status: '', type: '', search: '' });
     const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0, totalPages: 0 });
     const { error: showError, success: showSuccess } = useToast();
+    const [detailOpen, setDetailOpen] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
     const loadReports = useCallback(async () => {
         try {
@@ -382,8 +356,16 @@ const ReportsPage: React.FC = () => {
     }, [loadReports]);
 
     const handleFilterChange = (field: string, value: string) => {
-        setFilters(prev => ({ ...prev, [field]: value }));
+        setUiFilters(prev => ({ ...prev, [field]: value }));
+    };
+
+    const applyFilters = () => {
+        setFilters(uiFilters);
         setPagination(prev => ({ ...prev, page: 1 }));
+        // dispara carregamento com os filtros aplicados
+        // como loadReports depende de filters e pagination, o useEffect irá chamar
+        // mas forçamos aqui também para feedback imediato
+        loadReports();
     };
 
     const handlePageChange = (newPage: number) => {
@@ -395,8 +377,7 @@ const ReportsPage: React.FC = () => {
     };
 
     const clearFilters = () => {
-        setFilters({ status: '', type: '', search: '' });
-        setPagination(prev => ({ ...prev, page: 1 }));
+        setUiFilters({ status: '', type: '', search: '' });
     };
 
     useEffect(() => {
@@ -404,16 +385,32 @@ const ReportsPage: React.FC = () => {
         return () => clearInterval(interval);
     }, [loadReports]);
 
-    const handleDownload = async (reportId: string) => {
-        setDownloadingReports(prev => new Set(prev).add(reportId));
+    const openDetail = async (id: string) => {
+        setDetailOpen(true);
+        setDetailLoading(true);
         try {
-            const url = buildApiUrl(API_CONFIG.ENDPOINTS.REPORTS_DOWNLOAD(reportId));
+            const detail = await apiRequest(`${API_CONFIG.ENDPOINTS.REPORTS}/${id}`);
+            setSelectedReport(detail as any);
+        } catch (e) {
+            showError('Erro ao carregar detalhes do relatório');
+            setSelectedReport(null);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    const closeDetail = () => {
+        setDetailOpen(false);
+        setSelectedReport(null);
+    };
+
+    const handleDownloadFromDetail = () => {
+        const url = selectedReport?.downloadUrl;
+        if (url) {
             window.open(url, '_blank');
             showSuccess('Download iniciado!');
-        } catch (error) {
-            showError('Erro ao fazer download do relatório');
-        } finally {
-            setDownloadingReports(prev => { const s = new Set(prev); s.delete(reportId); return s; });
+        } else {
+            showError('URL de download indisponível');
         }
     };
 
@@ -473,12 +470,12 @@ const ReportsPage: React.FC = () => {
                     </Typography>
                     <Grid container spacing={2} alignItems="center">
                         <Grid item xs={12} sm={6} md={3}>
-                            <TextField fullWidth label="Buscar relatórios" value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} placeholder="Nome ou descrição..." InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon /></InputAdornment>) }} />
+                            <TextField fullWidth label="Buscar relatórios" value={uiFilters.search} onChange={(e) => handleFilterChange('search', e.target.value)} placeholder="Nome ou descrição..." InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon /></InputAdornment>) }} />
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
                             <FormControl fullWidth>
                                 <InputLabel>Status</InputLabel>
-                                <Select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} label="Status">
+                                <Select value={uiFilters.status} onChange={(e) => handleFilterChange('status', e.target.value)} label="Status">
                                     <MenuItem value="">Todos</MenuItem>
                                     <MenuItem value="PENDING">Pendente</MenuItem>
                                     <MenuItem value="PROCESSING">Processando</MenuItem>
@@ -490,7 +487,7 @@ const ReportsPage: React.FC = () => {
                         <Grid item xs={12} sm={6} md={3}>
                             <FormControl fullWidth>
                                 <InputLabel>Tipo</InputLabel>
-                                <Select value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)} label="Tipo">
+                                <Select value={uiFilters.type} onChange={(e) => handleFilterChange('type', e.target.value)} label="Tipo">
                                     <MenuItem value="">Todos</MenuItem>
                                     {Object.entries(REPORT_TYPE_LABELS).map(([key, label]) => (
                                         <MenuItem key={key} value={key}>{label}</MenuItem>
@@ -501,6 +498,7 @@ const ReportsPage: React.FC = () => {
                         <Grid item xs={12} sm={6} md={3}>
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 <Button variant="outlined" startIcon={<ClearIcon />} onClick={clearFilters}>Limpar</Button>
+                                <Button variant="contained" onClick={applyFilters}>Filtrar</Button>
                             </Box>
                         </Grid>
                     </Grid>
@@ -523,19 +521,12 @@ const ReportsPage: React.FC = () => {
                     <List>
                         {reports.map((report, index) => (
                             <React.Fragment key={report.id}>
-                                <ListItem sx={{ py: 3, flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' } }}>
+                                <ListItem onClick={() => openDetail(report.id)} sx={{ py: 3, flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, cursor: 'pointer' }}>
                                     <ListItemText
                                         primary={<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1, flexWrap: 'wrap' }}>{getStatusIcon(report.status)}<Typography variant="h6" component="span" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>{report.name}</Typography><Chip label={REPORT_STATUS_LABELS[report.status]} color={getStatusColor(report.status) as any} size="small" /></Box>}
                                         secondary={<Box>{report.description && (<Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{report.description}</Typography>)}<Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', flexDirection: { xs: 'column', sm: 'row' } }}><Chip label={`Tipo: ${REPORT_TYPE_LABELS[report.type]}`} variant="outlined" size="small" />{report.requestedBy && (<Chip label={`Criado por: ${report.requestedBy}`} variant="outlined" size="small" />)}<Chip label={`Criado em: ${formatDate(report.createdAt)}`} variant="outlined" size="small" /></Box></Box>}
                                         sx={{ width: { xs: '100%', sm: 'auto' } }}
                                     />
-                                    <ListItemSecondaryAction sx={{ position: { xs: 'static', sm: 'absolute' }, right: { xs: 'auto', sm: 16 }, top: { xs: 'auto', sm: '50%' }, transform: { xs: 'none', sm: 'translateY(-50%)' }, mt: { xs: 0.5, sm: 0 }, mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' }, display: { xs: 'flex', sm: 'block' }, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
-                                        {report.status === 'READY' && report.fileKey && (
-                                            <Button variant="contained" color="success" startIcon={downloadingReports.has(report.id) ? (<CircularProgress size={16} color="inherit" />) : (<DownloadIcon />)} onClick={() => handleDownload(report.id)} disabled={downloadingReports.has(report.id)}>
-                                                {downloadingReports.has(report.id) ? 'Baixando...' : 'Download'}
-                                            </Button>
-                                        )}
-                                    </ListItemSecondaryAction>
                                 </ListItem>
                                 {index < reports.length - 1 && <Divider />}
                             </React.Fragment>
@@ -571,6 +562,39 @@ const ReportsPage: React.FC = () => {
             </Paper>
 
             <CreateReportModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onReportCreated={loadReports} />
+
+            <Dialog open={detailOpen} onClose={closeDetail} maxWidth="sm" fullWidth>
+                <DialogTitle>Detalhes do Relatório</DialogTitle>
+                <DialogContent dividers>
+                    {detailLoading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : !selectedReport ? (
+                        <Alert severity="error">Não foi possível carregar os detalhes.</Alert>
+                    ) : (
+                        <Box sx={{ display: 'grid', gap: 2 }}>
+                            <Typography variant="h6">{selectedReport.name}</Typography>
+                            {selectedReport.description && (
+                                <Typography variant="body2" color="text.secondary">{selectedReport.description}</Typography>
+                            )}
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                <Chip label={`Status: ${REPORT_STATUS_LABELS[selectedReport.status] || selectedReport.status}`} />
+                                <Chip label={`Tipo: ${REPORT_TYPE_LABELS[selectedReport.type] || selectedReport.type}`} />
+                                <Chip label={`Criado em: ${formatDate(selectedReport.createdAt)}`} />
+                            </Box>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeDetail}>Fechar</Button>
+                    {selectedReport && selectedReport.status === 'READY' && selectedReport.downloadUrl && (
+                        <Button variant="contained" color="success" startIcon={<DownloadIcon />} onClick={handleDownloadFromDetail}>
+                            Download
+                        </Button>
+                    )}
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
