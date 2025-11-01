@@ -1,6 +1,7 @@
 // Configuração da API
 export const API_CONFIG = {
-  BASE_URL: "http://localhost:3000",
+  // Usa caminho relativo para o proxy do Nginx
+  BASE_URL: "",
 
   ENDPOINTS: {
     // Vendas
