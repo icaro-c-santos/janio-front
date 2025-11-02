@@ -4,7 +4,6 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
-// removed: Customers and Suppliers pages now live under UsersPage tabs
 import Home from './pages/Home';
 import InventoryPage from './pages/inventory';
 import Login from './pages/Login';
@@ -12,9 +11,7 @@ import ResponsiveLayout from './components/ResponsiveLayout';
 import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/ToastContainer';
 import ReportsPage from './pages/reports';
-// removed: Suppliers page replaced by UsersPage tabs
-import InventoryPurchasesPage from './pages/financial/sections/InventoryPurchasesSection';
-import SalesPage from './pages/Sales';
+import SalesPage from './pages/sales/index';
 import FinancialPage from './pages/financial';
 import UsersPage from './pages/users';
 
