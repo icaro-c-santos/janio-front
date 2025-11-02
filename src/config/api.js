@@ -1,7 +1,7 @@
 // Configuração da API
 export const API_CONFIG = {
   // Usa caminho relativo para o proxy do Nginx
-  BASE_URL: "",
+  BASE_URL: "/api",
 
   ENDPOINTS: {
     // Vendas
@@ -114,3 +114,4 @@ export const uploadFile = async (endpoint, formData) => {
 
   return response.json();
 };
+
