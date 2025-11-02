@@ -1,34 +1,32 @@
 # Estágio de build
-FROM node:20-alpine as build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copia os arquivos de definição de dependências
-COPY package.json package-lock.json* ./
-
-# Instala as dependências
+COPY package*.json ./
 RUN npm ci
 
-# Copia o restante dos arquivos do projeto
 COPY . .
-
-# Constrói a aplicação para produção
 RUN npm run build
 
-# Estágio de produção
-FROM nginx:alpine
+# Etapa final com Nginx
+FROM nginx:1.25-alpine
 
-# Copia a configuração personalizada do nginx se existir
+# Remove configuração padrão
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copia tua configuração
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Remove arquivos padrão do nginx
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copia os arquivos de build para o diretório do nginx
+# Copia o build do Vite/React
+# (troque dist por build se for CRA)
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expõe a porta 80
+# Exponha a porta 80
 EXPOSE 80
 
-# Inicia o nginx
+# Log de debug (ajuda a ver se os arquivos estão no lugar)
+RUN ls -la /usr/share/nginx/html || true
+
 CMD ["nginx", "-g", "daemon off;"]
+
