@@ -1,5 +1,5 @@
 // Configuração da API
-export const API_BASE_URL = "";
+export const API_BASE_URL = "/api";
 
 // Endpoints da API
 export const API_ENDPOINTS = {
