@@ -1,31 +1,37 @@
 // Configuração da API
-export const API_CONFIG = {
-  // Usa caminho relativo para o proxy do Nginx
-  BASE_URL: "/api",
+export const API_BASE_URL = "";
 
-  ENDPOINTS: {
-    // Vendas
-    SALES: "/sales",
-    SALES_DELETE: (id) => `/sales/${id}`,
-
-    // Clientes
-    CUSTOMERS: "/customers",
-
-    // Produtos
-    PRODUCTS: "/products",
-    PRODUCT_PRICE: (productId, customerId) =>
-      `/products/${productId}/price/${customerId}`,
-
-    // Health check
-    READINESS: "/readiness",
-
-    // Relatórios
-    REPORTS: "/reports",
-    REPORTS_DOWNLOAD: (id) => `/reports/${id}/download`,
-    REPORTS_TYPES: "/reports/types",
+// Endpoints da API
+export const API_ENDPOINTS = {
+  // Vendas
+  SALES: "/sales",
+  SALES_DELETE: function (id) {
+    return `/sales/${id}`;
   },
 
-  // Configurações de requisição
+  // Clientes
+  CUSTOMERS: "/customers",
+
+  // Produtos
+  PRODUCTS: "/products",
+  PRODUCT_PRICE: function (productId, customerId) {
+    return `/products/${productId}/price/${customerId}`;
+  },
+
+  // Health check
+  READINESS: "/readiness",
+
+  // Relatórios
+  REPORTS: "/reports",
+  REPORTS_DOWNLOAD: function (id) {
+    return `/reports/${id}/download`;
+  },
+  REPORTS_TYPES: "/reports/types",
+};
+
+// Configurações de requisição
+export const API_CONFIG = {
+  // Headers padrão
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
   },
@@ -43,28 +49,52 @@ export const API_CONFIG = {
 
 // Função para construir URL completa
 export const buildApiUrl = (endpoint) => {
-  return `${API_CONFIG.BASE_URL}${endpoint}`;
+  // Se o endpoint já contém http, retorna ele mesmo (URL completa)
+  if (
+    typeof endpoint === "string" &&
+    (endpoint.startsWith("http://") || endpoint.startsWith("https://"))
+  ) {
+    return endpoint;
+  }
+
+  // Remove barras iniciais duplicadas
+  const normalizedEndpoint =
+    endpoint && typeof endpoint === "string"
+      ? endpoint.replace(/^\/+/, "")
+      : "";
+
+  return `${API_BASE_URL}/${normalizedEndpoint}`;
 };
 
 // Função para fazer requisições HTTP com configurações padrão
 export const apiRequest = async (endpoint, options = {}) => {
-  const url =
-    typeof endpoint === "function"
-      ? buildApiUrl(endpoint())
-      : buildApiUrl(endpoint);
+  // Primeiro, obtemos o token
+  let token;
+  try {
+    token = localStorage.getItem("janio_erp_token");
+  } catch (error) {
+    console.error("Erro ao acessar localStorage:", error);
+  }
 
+  // Construímos a URL corretamente
+  const url = buildApiUrl(
+    typeof endpoint === "function" ? endpoint() : endpoint
+  );
+
+  // Configuramos os headers
   const headers = {
     ...API_CONFIG.DEFAULT_HEADERS,
-    ...options.headers,
+    ...(options.headers || {}),
   };
-  try {
-    const token = localStorage.getItem("janio_erp_token");
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-  } catch {}
+
+  // Adicionamos o token ao header se existir
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   const config = {
-    headers,
     ...options,
+    headers,
   };
 
   // Adicionar timeout se não especificado
@@ -86,32 +116,49 @@ export const apiRequest = async (endpoint, options = {}) => {
 };
 
 // Função para fazer upload de arquivos
-export const uploadFile = async (endpoint, formData) => {
-  const url =
-    typeof endpoint === "function"
-      ? buildApiUrl(endpoint())
-      : buildApiUrl(endpoint);
-
-  const headers = {};
+export const uploadFile = async (endpoint, formData, options = {}) => {
+  // Obtemos o token
+  let token;
   try {
-    const token = localStorage.getItem("janio_erp_token");
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-  } catch {}
-
-  const response = await fetch(url, {
-    method: "POST",
-    body: formData,
-    headers,
-    // Não definir Content-Type para multipart/form-data
-    // O browser define automaticamente com o boundary correto
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    const msg = err?.message || `HTTP error! status: ${response.status}`;
-    throw new Error(msg);
+    token = localStorage.getItem("janio_erp_token");
+  } catch (error) {
+    console.error("Erro ao acessar localStorage:", error);
   }
 
-  return response.json();
-};
+  // Construímos a URL corretamente
+  const url = buildApiUrl(
+    typeof endpoint === "function" ? endpoint() : endpoint
+  );
 
+  // Configuramos os headers
+  const headers = {
+    // Não definimos Content-Type aqui, pois o navegador irá definir automaticamente
+    // com o boundary correto para o FormData
+    ...(options.headers || {}),
+  };
+
+  // Adicionamos o token ao header se existir
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: formData,
+      ...options,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const msg = err?.message || `HTTP error! status: ${response.status}`;
+      throw new Error(msg);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Upload error:", error);
+    throw error;
+  }
+};

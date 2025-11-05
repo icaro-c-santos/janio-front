@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000";
+import { API_BASE_URL } from "../config/api";
 
 export interface UnifiedMovement {
   id: string;
@@ -28,7 +28,7 @@ export interface InventoryItem {
   updatedAt?: string;
   alertThreshold?: number;
   criticalQuantity?: number;
-  status?: 'ok' | 'atencao' | 'critico';
+  status?: "ok" | "atencao" | "critico";
 }
 
 export interface CreateInputMovementRequest {

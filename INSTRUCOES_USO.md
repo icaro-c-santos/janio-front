@@ -162,7 +162,7 @@ Por padrão, a API está configurada para rodar em `http://localhost:3000`.
 Para alterar, edite o arquivo `src/services/customersService.ts`:
 
 ```typescript
-const API_BASE_URL = "http://localhost:3000"; // Altere aqui
+import { API_BASE_URL } from "../config/api"; // Altere aqui
 ```
 
 ### Endpoints Utilizados

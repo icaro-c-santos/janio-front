@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000";
+import { API_BASE_URL } from "../config/api";
 
 export type AccountPayableStatus = "PENDING" | "PAID" | "OVERDUE";
 
@@ -123,14 +123,21 @@ class AccountsPayableService {
     });
   }
 
-  async settle(id: string, payload: { paidAt?: string }, receiptFile?: File | null): Promise<AccountPayableDetail> {
+  async settle(
+    id: string,
+    payload: { paidAt?: string },
+    receiptFile?: File | null
+  ): Promise<AccountPayableDetail> {
     const form = new FormData();
-    if (payload.paidAt) form.append('paidAt', payload.paidAt);
-    if (receiptFile) form.append('receipt', receiptFile);
-    return this.makeRequest<AccountPayableDetail>(`/accounts-payable/${id}/settle`, {
-      method: 'POST',
-      body: form,
-    });
+    if (payload.paidAt) form.append("paidAt", payload.paidAt);
+    if (receiptFile) form.append("receipt", receiptFile);
+    return this.makeRequest<AccountPayableDetail>(
+      `/accounts-payable/${id}/settle`,
+      {
+        method: "POST",
+        body: form,
+      }
+    );
   }
 }
 
