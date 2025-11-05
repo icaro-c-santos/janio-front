@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000"; // Ajuste conforme necessário
+import { API_BASE_URL } from "../config/api"; // Ajuste conforme necessário
 
 export type CustomerType = "PF" | "PJ";
 

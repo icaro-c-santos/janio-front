@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000";
+import { API_BASE_URL } from "../config/api";
 
 export interface PurchaseListItem {
   id: string;
@@ -35,7 +35,10 @@ export interface CreatePurchaseRequest {
 }
 
 class PurchasesService {
-  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const defaultHeaders: Record<string, string> = {};
 
@@ -44,11 +47,14 @@ class PurchasesService {
     }
 
     try {
-      const token = localStorage.getItem('janio_erp_token');
+      const token = localStorage.getItem("janio_erp_token");
       if (token) defaultHeaders["Authorization"] = `Bearer ${token}`;
     } catch {}
 
-    const response = await fetch(url, { ...options, headers: { ...defaultHeaders, ...options.headers } });
+    const response = await fetch(url, {
+      ...options,
+      headers: { ...defaultHeaders, ...options.headers },
+    });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.message || `Erro ${response.status}`);
@@ -56,13 +62,28 @@ class PurchasesService {
     return response.json();
   }
 
-  async list(params?: Partial<{ itemType: string; dateFrom: string; dateTo: string; supplierQuery: string; page: number; pageSize: number; }>): Promise<PaginatedPurchases> {
-    const qs = params ? '?' + new URLSearchParams(
-      Object.entries(params).reduce<Record<string, string>>((acc, [k, v]) => {
-        if (v !== undefined && v !== null) acc[k] = String(v);
-        return acc;
-      }, {})
-    ).toString() : '';
+  async list(
+    params?: Partial<{
+      itemType: string;
+      dateFrom: string;
+      dateTo: string;
+      supplierQuery: string;
+      page: number;
+      pageSize: number;
+    }>
+  ): Promise<PaginatedPurchases> {
+    const qs = params
+      ? "?" +
+        new URLSearchParams(
+          Object.entries(params).reduce<Record<string, string>>(
+            (acc, [k, v]) => {
+              if (v !== undefined && v !== null) acc[k] = String(v);
+              return acc;
+            },
+            {}
+          )
+        ).toString()
+      : "";
     return this.makeRequest<PaginatedPurchases>(`/inventory/purchases${qs}`);
   }
 
@@ -70,24 +91,27 @@ class PurchasesService {
     return this.makeRequest<string[]>(`/inventory/item-types`);
   }
 
-  async create(payload: CreatePurchaseRequest, receipt?: File): Promise<PurchaseDetails> {
+  async create(
+    payload: CreatePurchaseRequest,
+    receipt?: File
+  ): Promise<PurchaseDetails> {
     if (receipt) {
       const form = new FormData();
-      form.append('itemType', payload.itemType);
-      form.append('purchaseDate', payload.purchaseDate);
-      form.append('unitPrice', String(payload.unitPrice));
-      form.append('quantity', String(payload.quantity));
-      form.append('supplierId', payload.supplierId);
-      form.append('dueDate', payload.dueDate);
-      if (payload.description) form.append('description', payload.description);
-      form.append('receipt', receipt);
+      form.append("itemType", payload.itemType);
+      form.append("purchaseDate", payload.purchaseDate);
+      form.append("unitPrice", String(payload.unitPrice));
+      form.append("quantity", String(payload.quantity));
+      form.append("supplierId", payload.supplierId);
+      form.append("dueDate", payload.dueDate);
+      if (payload.description) form.append("description", payload.description);
+      form.append("receipt", receipt);
       return this.makeRequest<PurchaseDetails>(`/inventory/purchases`, {
-        method: 'POST',
+        method: "POST",
         body: form,
       });
     }
     return this.makeRequest<PurchaseDetails>(`/inventory/purchases`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(payload),
     });
   }

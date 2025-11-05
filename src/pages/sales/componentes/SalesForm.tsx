@@ -32,8 +32,8 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
     const [formData, setFormData] = useState<CreateSaleRequest>({
         customerId: '',
         quantity: 1,
-        unitPrice: 0,
-        saleDate: new Date().toISOString().split('T')[0],
+        unitPrice: 47.5, // Valor padrão definido como 47.5
+        saleDate: new Date().toLocaleDateString('en-CA'), // Formato YYYY-MM-DD no fuso horário local
         receipt: undefined,
     });
 
@@ -134,8 +134,8 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
         setFormData({
             customerId: '',
             quantity: 1,
-            unitPrice: 0,
-            saleDate: new Date().toISOString().split('T')[0],
+            unitPrice: 47.5, // Valor padrão definido como 47.5
+            saleDate: new Date().toLocaleDateString('en-CA'), // Formato YYYY-MM-DD no fuso horário local
             receipt: undefined,
         });
         setSelectedFile(null);
