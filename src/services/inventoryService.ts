@@ -45,6 +45,12 @@ export interface CreateOutputMovementRequest {
   reason?: string;
 }
 
+export interface CreateCocoKitoInputRequest {
+  quantity: number;
+  unitPrice: number;
+  movementDate: string;
+}
+
 class InventoryService {
   private async makeRequest<T>(
     endpoint: string,
@@ -127,6 +133,17 @@ class InventoryService {
     if (Array.isArray(res?.items)) return res.items as InventoryItem[];
     if (Array.isArray(res?.data)) return res.data as InventoryItem[];
     return [];
+  }
+
+  async listCurrentStock(): Promise<InventoryItem[]> {
+    return this.makeRequest<InventoryItem[]>('/inventory/current-stock');
+  }
+
+  async createCocoKitoInput(data: CreateCocoKitoInputRequest): Promise<void> {
+    return this.makeRequest<void>('/inventory/coco-kito/input', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 }
 

@@ -5,6 +5,7 @@ import MovementsTable from './components/MovementsTable';
 import MovementDetailsDialog from './components/MovementDetailsDialog';
 import CreateInputDialog from './components/CreateInputDialog';
 import CreateOutputDialog from './components/CreateOutputDialog';
+import CreateCocoKitoDialog from './components/CreateCocoKitoDialog';
 import StockTable from './components/StockTable';
 import MobileMovementCard from './components/MobileMovementCard';
 import { inventoryService, PaginatedUnifiedResponse, UnifiedMovement, InventoryItem } from '../../services/inventoryService';
@@ -26,9 +27,17 @@ const InventoryPage: React.FC = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [createOutputOpen, setCreateOutputOpen] = useState(false);
   const [createOutputLoading, setCreateOutputLoading] = useState(false);
-
+const [cocoKitoOpen, setCocoKitoOpen] = useState(false);
   const [filters, setFilters] = useState<InventoryFilters>({}); // draft filters (UI)
   const [appliedFilters, setAppliedFilters] = useState<InventoryFilters>({}); // applied filters (query)
+
+  const handleCocoKitoSuccess = () => {
+    setPage(0);
+    loadMovements();
+    if (tab === 1) {
+      loadStock();
+    }
+  };
 
   const queryParams = useMemo(() => ({
     ...appliedFilters,
@@ -114,6 +123,14 @@ const InventoryPage: React.FC = () => {
         {tab === 0 && (
           <Box display="flex" gap={1}>
             <Button variant="contained" onClick={() => setCreateOpen(true)}>Criar entrada</Button>
+            <Button 
+              variant="contained" 
+              color="secondary" 
+              onClick={() => setCocoKitoOpen(true)}
+              sx={{ backgroundColor: '#4caf50', '&:hover': { backgroundColor: '#388e3c' } }}
+            >
+              Entrada de Coco
+            </Button>
             <Button variant="outlined" onClick={() => setCreateOutputOpen(true)}>Dar baixa</Button>
           </Box>
         )}
@@ -174,6 +191,11 @@ const InventoryPage: React.FC = () => {
             open={createOutputOpen}
             onClose={() => setCreateOutputOpen(false)}
             onSubmit={handleCreateOutput}
+          />
+          <CreateCocoKitoDialog
+            open={cocoKitoOpen}
+            onClose={() => setCocoKitoOpen(false)}
+            onSuccess={handleCocoKitoSuccess}
           />
         </>
       )}
