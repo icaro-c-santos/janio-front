@@ -19,6 +19,7 @@ import { AttachFile as AttachFileIcon, CameraAlt as CameraIcon } from '@mui/icon
 import { salesService, CreateSaleRequest } from '../../../services/salesService';
 import { customersService, Customer } from '../../../services/customersService';
 import { useToast } from '../../../contexts/ToastContext';
+import { DEFAULT_UNIT_PRICE } from '../constants';
 
 interface SalesFormProps {
     onSuccess?: () => void;
@@ -32,7 +33,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
     const [formData, setFormData] = useState<CreateSaleRequest>({
         customerId: '',
         quantity: 1,
-        unitPrice: 47.5, // Valor padrão definido como 47.5
+        unitPrice: DEFAULT_UNIT_PRICE,
         saleDate: new Date().toLocaleDateString('en-CA'), // Formato YYYY-MM-DD no fuso horário local
         receipt: undefined,
     });
@@ -43,6 +44,7 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [quantityInput, setQuantityInput] = useState<string>('1');
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -81,8 +83,8 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
             // Se o arquivo não tiver um nome apropriado (ex: blob), criar um nome padrão
             let fileToUse = file;
             if (!file.name || file.name === 'blob' || file.name.startsWith('image')) {
-                const extension = file.type.includes('pdf') ? 'pdf' : 
-                                  file.type.includes('png') ? 'png' : 'jpg';
+                const extension = file.type.includes('pdf') ? 'pdf' :
+                    file.type.includes('png') ? 'png' : 'jpg';
                 const timestamp = Date.now();
                 fileToUse = new File([file], `recibo-${timestamp}.${extension}`, { type: file.type });
             }
@@ -142,10 +144,11 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
         setFormData({
             customerId: '',
             quantity: 1,
-            unitPrice: 47.5, // Valor padrão definido como 47.5
+            unitPrice: DEFAULT_UNIT_PRICE,
             saleDate: new Date().toLocaleDateString('en-CA'), // Formato YYYY-MM-DD no fuso horário local
             receipt: undefined,
         });
+        setQuantityInput('1');
         setSelectedFile(null);
         setError(null);
         setFieldErrors({});
@@ -206,10 +209,32 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
                             fullWidth
                             label="Quantidade"
                             type="number"
-                            value={formData.quantity || ''}
+                            value={quantityInput}
                             onChange={(e) => {
-                                const value = parseInt(e.target.value);
-                                handleInputChange('quantity', isNaN(value) ? 1 : value);
+                                const inputValue = e.target.value;
+                                setQuantityInput(inputValue);
+                                if (inputValue !== '') {
+                                    const value = parseInt(inputValue);
+                                    if (!isNaN(value) && value > 0) {
+                                        handleInputChange('quantity', value);
+                                    }
+                                }
+                            }}
+                            onBlur={(e) => {
+                                const inputValue = e.target.value;
+                                if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                                    setQuantityInput('1');
+                                    handleInputChange('quantity', 1);
+                                } else {
+                                    const value = parseInt(inputValue);
+                                    if (!isNaN(value) && value > 0) {
+                                        setQuantityInput(String(value));
+                                        handleInputChange('quantity', value);
+                                    } else {
+                                        setQuantityInput('1');
+                                        handleInputChange('quantity', 1);
+                                    }
+                                }
                             }}
                             error={!!fieldErrors.quantity}
                             helperText={fieldErrors.quantity || 'Digite a quantidade'}

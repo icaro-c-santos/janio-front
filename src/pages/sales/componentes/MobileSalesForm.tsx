@@ -22,6 +22,7 @@ import { AttachFile as AttachFileIcon, CameraAlt as CameraIcon } from '@mui/icon
 import { CreateSaleRequest } from '../../../services/salesService';
 import { customersService, Customer } from '../../../services/customersService';
 import { useToast } from '../../../contexts/ToastContext';
+import { DEFAULT_UNIT_PRICE } from '../constants';
 
 interface MobileSalesFormProps {
     onSuccess?: () => void;
@@ -38,7 +39,7 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
     const [formData, setFormData] = useState<CreateSaleRequest>({
         customerId: '',
         quantity: 1,
-        unitPrice: 0,
+        unitPrice: DEFAULT_UNIT_PRICE,
         saleDate: new Date().toISOString().split('T')[0],
         receipt: undefined,
     });
@@ -49,6 +50,7 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [quantityInput, setQuantityInput] = useState<string>('1');
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -201,10 +203,32 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
                             fullWidth
                             label="Quantidade"
                             type="number"
-                            value={formData.quantity || ''}
+                            value={quantityInput}
                             onChange={(e) => {
-                                const value = parseInt(e.target.value);
-                                handleInputChange('quantity', isNaN(value) ? 1 : value);
+                                const inputValue = e.target.value;
+                                setQuantityInput(inputValue);
+                                if (inputValue !== '') {
+                                    const value = parseInt(inputValue);
+                                    if (!isNaN(value) && value > 0) {
+                                        handleInputChange('quantity', value);
+                                    }
+                                }
+                            }}
+                            onBlur={(e) => {
+                                const inputValue = e.target.value;
+                                if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                                    setQuantityInput('1');
+                                    handleInputChange('quantity', 1);
+                                } else {
+                                    const value = parseInt(inputValue);
+                                    if (!isNaN(value) && value > 0) {
+                                        setQuantityInput(String(value));
+                                        handleInputChange('quantity', value);
+                                    } else {
+                                        setQuantityInput('1');
+                                        handleInputChange('quantity', 1);
+                                    }
+                                }
                             }}
                             error={!!fieldErrors.quantity}
                             helperText={fieldErrors.quantity || 'Digite a quantidade'}
