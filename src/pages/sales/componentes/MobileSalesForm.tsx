@@ -18,7 +18,7 @@ import {
     Divider,
     Chip,
 } from '@mui/material';
-import { AttachFile as AttachFileIcon } from '@mui/icons-material';
+import { AttachFile as AttachFileIcon, CameraAlt as CameraIcon } from '@mui/icons-material';
 import { CreateSaleRequest } from '../../../services/salesService';
 import { customersService, Customer } from '../../../services/customersService';
 import { useToast } from '../../../contexts/ToastContext';
@@ -86,8 +86,16 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            setSelectedFile(file);
-            setFormData(prev => ({ ...prev, receipt: file }));
+            // Se o arquivo não tiver um nome apropriado (ex: blob), criar um nome padrão
+            let fileToUse = file;
+            if (!file.name || file.name === 'blob' || file.name.startsWith('image')) {
+                const extension = file.type.includes('pdf') ? 'pdf' : 
+                                  file.type.includes('png') ? 'png' : 'jpg';
+                const timestamp = Date.now();
+                fileToUse = new File([file], `recibo-${timestamp}.${extension}`, { type: file.type });
+            }
+            setSelectedFile(fileToUse);
+            setFormData(prev => ({ ...prev, receipt: fileToUse }));
         }
     };
 
@@ -237,27 +245,50 @@ const MobileSalesForm: React.FC<MobileSalesFormProps> = ({ onSuccess, onCancel, 
 
                         <Box>
                             <input
-                                accept=".pdf"
+                                accept=".pdf,image/*"
                                 style={{ display: 'none' }}
                                 id="file-upload-mobile"
                                 type="file"
                                 onChange={handleFileChange}
                             />
-                            <label htmlFor="file-upload-mobile">
-                                <Button
-                                    variant="outlined"
-                                    component="span"
-                                    startIcon={<AttachFileIcon />}
-                                    fullWidth
-                                >
-                                    {selectedFile ? selectedFile.name : 'Anexar Recibo PDF (Opcional)'}
-                                </Button>
-                            </label>
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="camera-capture-mobile"
+                                type="file"
+                                capture="environment"
+                                onChange={handleFileChange}
+                            />
+                            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                                <label htmlFor="file-upload-mobile" style={{ flex: 1 }}>
+                                    <Button
+                                        variant="outlined"
+                                        component="span"
+                                        startIcon={<AttachFileIcon />}
+                                        fullWidth
+                                    >
+                                        {selectedFile ? selectedFile.name : 'Anexar Arquivo (Opcional)'}
+                                    </Button>
+                                </label>
+                                <label htmlFor="camera-capture-mobile">
+                                    <Button
+                                        variant="outlined"
+                                        component="span"
+                                        startIcon={<CameraIcon />}
+                                        color="primary"
+                                    >
+                                        Camera
+                                    </Button>
+                                </label>
+                            </Box>
                             {selectedFile && (
                                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
                                     Arquivo selecionado: {selectedFile.name}
                                 </Typography>
                             )}
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+                                Aceita PDF ou imagens (PNG/JPEG)
+                            </Typography>
                         </Box>
                     </Box>
                 );
