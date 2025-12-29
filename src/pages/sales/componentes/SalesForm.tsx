@@ -15,7 +15,7 @@ import {
     Divider,
     FormHelperText,
 } from '@mui/material';
-import { AttachFile as AttachFileIcon } from '@mui/icons-material';
+import { AttachFile as AttachFileIcon, CameraAlt as CameraIcon } from '@mui/icons-material';
 import { salesService, CreateSaleRequest } from '../../../services/salesService';
 import { customersService, Customer } from '../../../services/customersService';
 import { useToast } from '../../../contexts/ToastContext';
@@ -78,8 +78,16 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            setSelectedFile(file);
-            setFormData(prev => ({ ...prev, receipt: file }));
+            // Se o arquivo não tiver um nome apropriado (ex: blob), criar um nome padrão
+            let fileToUse = file;
+            if (!file.name || file.name === 'blob' || file.name.startsWith('image')) {
+                const extension = file.type.includes('pdf') ? 'pdf' : 
+                                  file.type.includes('png') ? 'png' : 'jpg';
+                const timestamp = Date.now();
+                fileToUse = new File([file], `recibo-${timestamp}.${extension}`, { type: file.type });
+            }
+            setSelectedFile(fileToUse);
+            setFormData(prev => ({ ...prev, receipt: fileToUse }));
         }
     };
 
@@ -245,30 +253,49 @@ const SalesForm: React.FC<SalesFormProps> = ({ onSuccess, onCancel, onConfirm })
                     <Grid item xs={12} md={6}>
                         <Box>
                             <input
-                                accept=".pdf"
+                                accept=".pdf,image/*"
                                 style={{ display: 'none' }}
                                 id="file-upload"
                                 type="file"
                                 onChange={handleFileChange}
                             />
-                            <label htmlFor="file-upload">
-                                <Button
-                                    variant="outlined"
-                                    component="span"
-                                    startIcon={<AttachFileIcon />}
-                                    fullWidth
-                                    sx={{ mb: 1 }}
-                                >
-                                    {selectedFile ? selectedFile.name : 'Anexar Recibo PDF (Opcional)'}
-                                </Button>
-                            </label>
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="camera-capture"
+                                type="file"
+                                capture="environment"
+                                onChange={handleFileChange}
+                            />
+                            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                                <label htmlFor="file-upload" style={{ flex: 1 }}>
+                                    <Button
+                                        variant="outlined"
+                                        component="span"
+                                        startIcon={<AttachFileIcon />}
+                                        fullWidth
+                                    >
+                                        {selectedFile ? selectedFile.name : 'Anexar Arquivo (Opcional)'}
+                                    </Button>
+                                </label>
+                                <label htmlFor="camera-capture">
+                                    <Button
+                                        variant="outlined"
+                                        component="span"
+                                        startIcon={<CameraIcon />}
+                                        color="primary"
+                                    >
+                                        Camera
+                                    </Button>
+                                </label>
+                            </Box>
                             {selectedFile && (
                                 <Typography variant="caption" color="text.secondary" display="block">
                                     Arquivo selecionado: {selectedFile.name}
                                 </Typography>
                             )}
                             <Typography variant="caption" color="text.secondary" display="block">
-                                Apenas arquivos PDF são aceitos
+                                Aceita PDF ou imagens (PNG/JPEG)
                             </Typography>
                         </Box>
                     </Grid>
