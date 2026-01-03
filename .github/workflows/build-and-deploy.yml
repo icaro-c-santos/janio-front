@@ -1,11 +1,17 @@
-name: Build and Push Docker Image (Manual)
+name: Build and Push Docker Image
 
 on:
+  # Dispara automaticamente quando há push na main
+  push:
+    branches:
+      - main
+
+  # Mantém a opção de disparo manual
   workflow_dispatch:
     inputs:
       tag:
         description: "Tag da imagem (ex: v1.0.0 ou latest)"
-        required: true
+        required: false
         default: "latest"
 
 jobs:
@@ -14,12 +20,21 @@ jobs:
 
     permissions:
       contents: read
-      packages: write   # Necessário para publicar no GitHub Container Registry
+      packages: write
       id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "TAG=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=latest" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -30,8 +45,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/$(basename ${{ github.repository }}):${{ github.event.inputs.tag }} .
+          docker build -t ghcr.io/${{ github.repository_owner }}/janio-front:${{ steps.tag.outputs.TAG }} .
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/$(basename ${{ github.repository }}):${{ github.event.inputs.tag }}
+          docker push ghcr.io/${{ github.repository_owner }}/janio-front:${{ steps.tag.outputs.TAG }}
+
+      - name: Show published image
+        run: echo "✅ Image ghcr.io/${{ github.repository_owner }}/janio-front:${{ steps.tag.outputs.TAG }} published successfully!"
