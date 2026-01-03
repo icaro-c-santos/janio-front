@@ -5,5 +5,4 @@
 /**
  * Preço unitário padrão para novas vendas
  */
-export const DEFAULT_UNIT_PRICE = 47.5;
-
+export const DEFAULT_UNIT_PRICE = 50;
