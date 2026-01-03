@@ -12,6 +12,7 @@ import {
     ListItemText,
     Box,
     Container,
+    Divider,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -22,8 +23,10 @@ import {
     Assessment as AssessmentIcon,
     Close as CloseIcon,
     Money as MoneyIcon,
+    Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 // no direct page imports here; navigation uses routes
 
 interface MobileLayoutProps {
@@ -34,6 +37,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useAuth();
 
     const menuItems = [
         { label: 'Home', path: '/', icon: <HomeIcon /> },
@@ -116,6 +120,35 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
                             </ListItemButton>
                         </ListItem>
                     ))}
+                </List>
+
+                <Divider />
+
+                {/* Botão de Logout */}
+                <List>
+                    <ListItem disablePadding>
+                        <ListItemButton
+                            onClick={() => {
+                                setDrawerOpen(false);
+                                logout();
+                            }}
+                            sx={{
+                                color: 'error.main',
+                                '&:hover': {
+                                    backgroundColor: 'error.light',
+                                    color: 'error.contrastText',
+                                    '& .MuiListItemIcon-root': {
+                                        color: 'error.contrastText',
+                                    },
+                                },
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'error.main' }}>
+                                <LogoutIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Sair" />
+                        </ListItemButton>
+                    </ListItem>
                 </List>
             </Drawer>
 

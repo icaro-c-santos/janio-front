@@ -41,7 +41,7 @@ import {
     Search as SearchIcon,
     Clear as ClearIcon,
 } from '@mui/icons-material';
-import { apiRequest, API_CONFIG, buildApiUrl } from '../../config/api';
+import { apiRequest, API_ENDPOINTS, buildApiUrl } from '../../config/api';
 
 const REPORT_TYPE_LABELS: Record<string, string> = {
     VENDAS_MENSAL_GERAL: 'Vendas Mensal (Geral)',
@@ -92,6 +92,7 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
         description: '',
         type: '',
         customerId: '',
+        month: '',
     });
     const [availableTypes, setAvailableTypes] = useState<string[]>([]);
     type SimpleItem = { id: string; name: string };
@@ -105,7 +106,7 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
     useEffect(() => {
         (async () => {
             try {
-                const types = await apiRequest(API_CONFIG.ENDPOINTS.REPORTS_TYPES);
+                const types = await apiRequest(API_ENDPOINTS.REPORTS_TYPES);
                 if (Array.isArray(types)) setAvailableTypes(types as string[]);
             } catch (_) {
                 // fallback: use keys from map
@@ -164,6 +165,11 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
             return;
         }
 
+        if (formData.type === 'VENDAS_MENSAL_POR_CLIENTE' && !formData.month) {
+            showError('Mês é obrigatório para este tipo de relatório');
+            return;
+        }
+
 
         setLoading(true);
         try {
@@ -175,10 +181,13 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
                     ...(needsCustomer(formData.type) && formData.customerId
                         ? { customerId: formData.customerId }
                         : {}),
+                    ...(formData.type === 'VENDAS_MENSAL_POR_CLIENTE' && formData.month
+                        ? { month: formData.month }
+                        : {}),
                 },
             };
 
-            await apiRequest(API_CONFIG.ENDPOINTS.REPORTS, {
+            await apiRequest(API_ENDPOINTS.REPORTS, {
                 method: 'POST',
                 body: JSON.stringify(reportData),
             });
@@ -198,6 +207,7 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
             description: '',
             type: '',
             customerId: '',
+            month: '',
         });
         onClose();
     };
@@ -285,6 +295,23 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
                                 />
                             </Grid>
                         )}
+
+                        {formData.type === 'VENDAS_MENSAL_POR_CLIENTE' && (
+                            <Grid item xs={12}>
+                                <TextField
+                                    fullWidth
+                                    label="Mês"
+                                    type="month"
+                                    value={formData.month}
+                                    onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                                    required
+                                    InputLabelProps={{
+                                        shrink: true,
+                                    }}
+                                    variant="outlined"
+                                />
+                            </Grid>
+                        )}
                     </Grid>
                 </DialogContent>
 
@@ -318,7 +345,7 @@ const ReportsPage: React.FC = () => {
         try {
             setLoading(true);
             const params = new URLSearchParams({ page: String(pagination.page), pageSize: String(pagination.pageSize) });
-            const response = await apiRequest(`${API_CONFIG.ENDPOINTS.REPORTS}?${params.toString()}`);
+            const response = await apiRequest(`${API_ENDPOINTS.REPORTS}?${params.toString()}`);
             let reportsData: any = (response as any).items || (response as any).data || response || [];
             reportsData = Array.isArray(reportsData) ? reportsData : [];
 
@@ -389,7 +416,7 @@ const ReportsPage: React.FC = () => {
         setDetailOpen(true);
         setDetailLoading(true);
         try {
-            const detail = await apiRequest(`${API_CONFIG.ENDPOINTS.REPORTS}/${id}`);
+            const detail = await apiRequest(`${API_ENDPOINTS.REPORTS}/${id}`);
             setSelectedReport(detail as any);
         } catch (e) {
             showError('Erro ao carregar detalhes do relatório');
