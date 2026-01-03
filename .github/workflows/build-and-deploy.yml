@@ -4,7 +4,7 @@ on:
   # Dispara automaticamente quando há push na main
   push:
     branches:
-      - main
+      - master
 
   # Mantém a opção de disparo manual
   workflow_dispatch:
