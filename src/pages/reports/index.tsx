@@ -60,6 +60,9 @@ const REPORT_STATUS_LABELS: Record<string, string> = {
     FAILED: 'Falhou',
 };
 const needsCustomer = (type: string) => type?.includes('POR_CLIENTE');
+/** Tipos que o backend processa com metadata.month (YYYY-MM). */
+const needsMonth = (type: string) =>
+    type === 'VENDAS_MENSAL_GERAL' || type === 'VENDAS_MENSAL_POR_CLIENTE';
 import { useToast } from '../../hooks/useToast';
 import { customersService } from '../../services/customersService';
 
@@ -165,7 +168,7 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
             return;
         }
 
-        if (formData.type === 'VENDAS_MENSAL_POR_CLIENTE' && !formData.month) {
+        if (needsMonth(formData.type) && !formData.month) {
             showError('Mês é obrigatório para este tipo de relatório');
             return;
         }
@@ -181,7 +184,7 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
                     ...(needsCustomer(formData.type) && formData.customerId
                         ? { customerId: formData.customerId }
                         : {}),
-                    ...(formData.type === 'VENDAS_MENSAL_POR_CLIENTE' && formData.month
+                    ...(needsMonth(formData.type) && formData.month
                         ? { month: formData.month }
                         : {}),
                 },
@@ -296,7 +299,7 @@ const CreateReportModal: React.FC<CreateReportModalProps> = ({
                             </Grid>
                         )}
 
-                        {formData.type === 'VENDAS_MENSAL_POR_CLIENTE' && (
+                        {needsMonth(formData.type) && (
                             <Grid item xs={12}>
                                 <TextField
                                     fullWidth

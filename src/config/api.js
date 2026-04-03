@@ -1,5 +1,5 @@
 // Configuração da API
-export const API_BASE_URL = "/api";
+export const API_BASE_URL = "http://localhost:3000";
 
 // Endpoints da API
 export const API_ENDPOINTS = {
@@ -78,7 +78,7 @@ export const apiRequest = async (endpoint, options = {}) => {
 
   // Construímos a URL corretamente
   const url = buildApiUrl(
-    typeof endpoint === "function" ? endpoint() : endpoint
+    typeof endpoint === "function" ? endpoint() : endpoint,
   );
 
   // Configuramos os headers
@@ -127,7 +127,7 @@ export const uploadFile = async (endpoint, formData, options = {}) => {
 
   // Construímos a URL corretamente
   const url = buildApiUrl(
-    typeof endpoint === "function" ? endpoint() : endpoint
+    typeof endpoint === "function" ? endpoint() : endpoint,
   );
 
   // Configuramos os headers
