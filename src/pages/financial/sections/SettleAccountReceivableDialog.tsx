@@ -31,8 +31,32 @@ const SettleAccountReceivableDialog: React.FC<Props> = ({ open, receivableId, on
             fullWidth
           />
           <Button variant="outlined" component="label">
-            Anexar comprovante (PDF opcional)
-            <input type="file" hidden accept="application/pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
+            Anexar comprovante (PDF ou imagem, opcional)
+            <input
+              type="file"
+              hidden
+              accept="application/pdf,image/png,image/jpeg"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) {
+                  setReceiptFile(null);
+                  return;
+                }
+                let fileToUse = file;
+                if (!file.name || file.name === 'blob' || file.name.startsWith('image')) {
+                  const extension = file.type.includes('pdf')
+                    ? 'pdf'
+                    : file.type.includes('png')
+                      ? 'png'
+                      : 'jpg';
+                  const timestamp = Date.now();
+                  fileToUse = new File([file], `comprovante-${timestamp}.${extension}`, {
+                    type: file.type,
+                  });
+                }
+                setReceiptFile(fileToUse);
+              }}
+            />
           </Button>
           {receiptFile && <Typography variant="body2">{receiptFile.name}</Typography>}
         </Stack>

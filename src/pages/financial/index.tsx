@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Paper, Tabs, Tab } from '@mui/material';
 import AccountsReceivableSection from './sections/AccountsReceivableSection';
 import ExpensesSection from './sections/ExpensesSection';
+import AccountsPayableSection from './sections/AccountsPayableSection';
 
 const FinancialPage: React.FC = () => {
   const [tab, setTab] = useState(0);
@@ -11,6 +12,7 @@ const FinancialPage: React.FC = () => {
       <Paper sx={{ mb: 2 }}>
         <Tabs value={tab} onChange={(_e, v) => setTab(v)} aria-label="tabs-financeiro" variant="scrollable">
           <Tab label="Contas a receber" />
+          <Tab label="Contas a pagar" />
           <Tab label="Despesas" />
         </Tabs>
       </Paper>
@@ -22,6 +24,12 @@ const FinancialPage: React.FC = () => {
       )}
 
       {tab === 1 && (
+        <Box sx={{ p: { xs: 0, md: 0 } }}>
+          <AccountsPayableSection />
+        </Box>
+      )}
+
+      {tab === 2 && (
         <Box sx={{ p: { xs: 0, md: 0 } }}>
           <ExpensesSection />
         </Box>
